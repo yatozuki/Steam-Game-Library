@@ -1,0 +1,86 @@
+/* Main Background Color */
+body::before {
+    content: "";
+    position: fixed;
+    top: -10%;
+    left: -10%;
+    width: 120%;
+    height: 120%;
+    z-index: -1;
+    background: linear-gradient(159deg, #be326d, #360652, #4d0874, #7623d5);
+    background-size: 300% 300%;
+    animation: gradient 50s ease infinite;
+    filter: blur(30px);
+  }
+
+/* Main Background Animation */
+@keyframes gradient {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+body {
+    margin: 0;
+    height: 100vh;
+    position: relative;
+    overflow: hidden;
+    color: #fff;
+}
+
+/* Navigation Bar */
+.nav-bar {
+    background: linear-gradient(40deg, #be326d 5%, #360652, #4d0874, #7623d5 );
+    overflow: hidden;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+}
+
+/* Title */
+.nav-bar a {
+    color: #dbcfd3;
+    transition: color 0.3s ease;
+    padding: 15px 16px;
+    text-decoration: none;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.nav-bar a:hover {
+    color: rgb(255, 255, 255);
+    transition: color 0.3s ease;
+}
+
+/* Search Bar */
+.nav-bar #search-bar {
+    text-align: center;
+    margin: 10px 50px;
+    width: 200px;
+    height: 40px;
+    border: 0;
+    outline: 0;
+    border-radius: 10px;
+}
+
+/* Title and Search on other devices */
+@media only screen and (max-width: 600px) {
+    .nav-bar a {
+      text-align: center;
+      flex-grow: 2;
+    }
+
+    .nav-bar #search-bar {
+        text-align: center;
+        flex-grow: 1;
+    }
+  }
+
+
+
