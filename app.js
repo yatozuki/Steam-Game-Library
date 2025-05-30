@@ -2,6 +2,8 @@ import express from 'express';
 import axios from 'axios';
 import compression from 'compression';
 import NodeCache from 'node-cache';
+import fs from 'fs';
+import { log } from 'console';
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -16,22 +18,75 @@ app.use(express.static('public'));
 app.use(compression());
 
 let gameAppId = [];
+let actualGames = [];
+let dlcGames = [];
+
+const gameIdPath = './data/actualGames.json';
+const dlcIdPath = './data/dlcGames.json'; 
+const removeIdPath = './data/removeGames.json';
 
 async function loadGameIDs() {
     try {
         const cachedIDs = myCache.get(`all_game_ids`);
         if (cachedIDs) {
             gameAppId = cachedIDs;
-            console.log(`Loaded ${gameAppId.length} game IDs from cache`);
+            console.log(`Loaded (Cached): ${gameAppId.length} Game IDs`);
             return;
         }
 
         const response = await axios.get(steam_API);
         gameAppId = response.data.applist.apps.map(game => game.appid);
-        myCache.get(`all_game_ids`, gameAppId, 86400);
-        console.log(`Loaded ${gameAppId.length} game IDs`);
+        myCache.set(`all_game_ids`, gameAppId, 86400);
+        // console.log(`Loaded ${gameAppId.length} Game IDs`);
     } catch (error) {
         console.log('Failed to load game IDs', error.message); 
+    }
+};
+
+async function idFilter() {
+    try {
+        const cachedGameIDs = myCache.get(`game_ids`);
+        const cachedDlcIDs = myCache.get(`dlc_ids`);
+
+        if (cachedGameIDs) {
+            actualGames = cachedGameIDs;
+            console.log(`Game Loaded (Cached): ${actualGames.length} Game IDs`);
+            return;
+        }
+
+        if (cachedDlcIDs) {
+            dlcGames = cachedDlcIDs;
+            console.log(`DLC Loaded (Cached): ${actualGames.length} DLC IDs`);
+            return;
+        }
+
+        for (let i = 0; i < gameAppId.length; i++) {
+            const justID = gameAppId[i];
+            const response = await axios.get(steam_API_details + justID);
+            const result = response.data[justID];
+            const gameData = result.data;
+
+            if (!result.success) {
+                gameAppId.splice(i, 1);
+                i--;
+                console.log(`${justID} was removed from gameAppId`);
+                continue;
+            };
+
+            if (gameData.type === 'game') {
+                actualGames.push(gameData);
+                myCache.set(`game_ids`, actualGames, 864000);
+                console.log(`Game Loaded: ${actualGames.length} Game IDs`);
+                
+            } else {
+                dlcGames.push(gameData);
+                myCache.set(`dlc_ids`, dlcGames, 864000);
+                console.log(`DLC Loaded: ${actualGames.length} DLC IDs`);
+
+            };
+        }
+    } catch (error) {
+        console.log('Error: ', error.message);
     }
 };
 
@@ -70,8 +125,8 @@ async function gameDetails(appID) {
 }
 
 app.get('/', async (req, res) => {
-    
-    try { 
+
+    try {
         const page = parseInt(req.query.page) || 1;
         const gamePerPage = 30;
 
@@ -80,11 +135,11 @@ app.get('/', async (req, res) => {
         
         const endIdx = startIdx + gamePerPage;
 
-        const paginatedGames = gameAppId.slice(startIdx, endIdx);
+        const paginatedGames = actualGames.slice(startIdx, endIdx);
 
         // console.log(`paginated Games: ${paginatedGames}`);
         
-        const totalPages = Math.ceil(gameAppId.length /gamePerPage);
+        const totalPages = Math.ceil(actualGames.length /gamePerPage);
         // console.log(`Total Pages: ${totalPages}`);
         
         let attempts = 0;
@@ -129,9 +184,23 @@ app.get('/dev-tool-cache', (req, res) => {
     });
 });
 
-loadGameIDs()
+async function serverStartup() {
+    try {
+        await loadGameIDs();
+        // await idFilter();
 
-app.listen(port,() => {
-    console.log('Server is running on port', port);
-    
-})
+        app.listen(port, () => {
+            console.log("\n===============================\n");
+            console.log('Server is running on PORT:', port);
+            console.log(`Total game Ids: ${gameAppId.length}`);
+            console.log(`Current Game Ids: ${actualGames.length}`);
+            console.log(`Current DLC Ids: ${dlcGames.length}`);
+            console.log("\n============== x ==============\n");
+        })
+
+    } catch (error) {
+        console.error("Failed to load game IDs:", error);
+    }
+}
+
+serverStartup();
