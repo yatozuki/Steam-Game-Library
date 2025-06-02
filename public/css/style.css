@@ -30,7 +30,7 @@ body {
     margin: 0;
     height: 100vh;
     position: relative;
-    overflow: hidden;
+    overflow-x: hidden;
     color: #fff;
 }
 
@@ -126,5 +126,24 @@ body {
     }
 }
 
+/* Pagination */
+.pagination { 
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+}
 
+.pagination a {
+    margin: 0 5px;
+    text-decoration: none;
+    text-align: center;
+    font-weight: bold;
+    align-content: center;
+    flex-basis: content;
 
+}
+
+.dot {
+    font-size: 1.5rem;
+    font-weight: bold;
+}

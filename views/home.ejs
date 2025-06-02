@@ -1,7 +1,43 @@
-<%- include('partials/header.ejs') %>
+<%- include('partials/header.ejs') %> 
 <%- include('partials/navbar.ejs') %>
+<% games.forEach(game => { %>
+    <h2>Name <%= game.name %></h2>
+    <img src="<%= game.header_image %>" width="200">
+    <% if (game.is_free) {%>
+        <p>Price: Free</p>
+    <% } else if (game.price_overview) {%>
+        <p>Price: <%= game.price_overview.final_formatted %></p>
+    <% } else {%>
+        <p>Price: N/A</p>
+    <% } %>
+
+<% }) %>
 
 
 
+
+<div class="pagination">
+    <% if (hasPrevious) { %>
+        <a class="btn" href="/?page=<%= currentPage - 1 %>">&lt;</a>
+    <% } %>
+    
+    <% if (currentPage > 3) { %>
+        <a class="btn" href="/?page=1">1</a>
+        <span class="dot">...</span>
+    <% } %>
+
+    <% for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) { %>
+    <a class="btn" href="/?page=<%= i %>"><%= i %></a>
+    <% } %>
+
+    <% if (currentPage < totalPages - 2) { %>
+        <span class="dot">...</span>
+        <a class="btn" href="/?page=<%= totalPages %>"><%= totalPages %></a>
+    <% } %>
+
+    <% if (hasNext) { %>
+        <a class="btn" href="/?page=<%= currentPage + 1 %>">&gt;</a>
+    <% } %>
+</div>
 
 <%- include('partials/footer.ejs') %>
