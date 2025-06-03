@@ -131,28 +131,23 @@ async function idFilter(page, perPage) {
                 continue;
             }
 
+            const response = await axios.get(steam_API_details + appID);
+            const result = response.data[appID];
+            const gameData = result.data;
+            
             if (actualGames.includes(appID)) {
-                const response = await axios.get(steam_API_details + appID);
-                const gameData = response.data[appID].data;
                 myCache.set(`game_${appID}`, {data: gameData}, 3600);
                 validIDs.push(gameData);
                 log(chalk.green(`Game AH: ${appID}`));
                 continue;
-                
             }
 
             if (dlcGames.includes(appID)) {
-                const response = await axios.get(steam_API_details + appID);
-                const gameData = response.data[appID].data;
                 myCache.set(`dlc_${appID}`, {data: gameData}, 3600);
                 validIDs.push(gameData);
                 log(chalk.blue(`DLC AH: ${appID}`));
                 continue;
             }
-
-            const response = await axios.get(steam_API_details + appID);
-            const result = response.data[appID];
-            const gameData = result.data;
 
             if (!result.success) {
                 myCache.set(`ignore_${appID}`, 3600);

@@ -126,15 +126,53 @@ body {
     }
 }
 
+/* Main Content (Main Page) */
+.container {
+    margin: 50px 30px 0 30px;
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    flex-direction: row;
+    row-gap: 50px;
+    column-gap: 25px;
+}
+
+.item {
+    align-content: center;
+    list-style-type: none;
+    border: 3px solid #BCCCDC;
+    border-radius: 15%;
+    background: linear-gradient(-150deg, #be326d 5%, #4d0874, #7623d5 );
+    width: 250px;
+    height: 260px;
+
+}
+
+.game-title {
+    text-align: center;
+    font-size: 1rem;
+}
+
+.game-image {
+    width: 250px;
+}
+
+.game-price {
+    text-align: center;
+    font-size: 1rem;
+}
+
+
+
+
 /* Pagination */
 .pagination { 
-    margin-top: 20px;
     display: flex;
     justify-content: center;
 }
 
 .pagination a {
-    margin: 0 5px;
+    margin: 50px 5px;
     text-decoration: none;
     text-align: center;
     font-weight: bold;
@@ -146,4 +184,5 @@ body {
 .dot {
     font-size: 1.5rem;
     font-weight: bold;
+    align-self: center;
 }
