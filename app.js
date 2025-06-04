@@ -5,13 +5,19 @@ import NodeCache from 'node-cache';
 import chalk from 'chalk';
 import fs from 'fs';
 import path from 'path';
-import url, { fileURLToPath } from 'url';
+import {
+    fileURLToPath
+} from 'url';
 
 const app = express();
-const __filename = fileURLToPath(import.meta.url);
+const __filename = fileURLToPath(
+    import.meta.url);
 const __dirname = path.dirname(__filename);
 const port = process.env.PORT || 3000;
-const myCache = new NodeCache({ stdTTL: 3600, checkperiod: 2000 });
+const myCache = new NodeCache({
+    stdTTL: 3600,
+    checkperiod: 2000
+});
 
 const steam_API = 'https://api.steampowered.com/ISteamApps/GetAppList/v2/';
 const steam_API_details = 'https://store.steampowered.com/api/appdetails?appids=';
@@ -28,16 +34,17 @@ let actualGames = [];
 let dlcGames = [];
 let ignoreID = [];
 
+
 let actualSet = new Set();
 let dlcSet = new Set();
 let ignoreSet = new Set();
 
-function loadData () {
+function loadData() {
     try {
         if (fs.existsSync('./data/Game_IDs.json')) {
             actualGames = JSON.parse(fs.readFileSync('./data/Game_IDs.json', 'utf-8'));
             actualGames.forEach(id => actualSet.add(id));
-  
+
         }
 
         if (fs.existsSync('./data/DLC_IDs.json')) {
@@ -55,7 +62,7 @@ function loadData () {
     }
 }
 
-function saveData () {
+function saveData() {
     try {
         if (!fs.existsSync('./data')) {
             fs.mkdirSync('./data');
@@ -97,94 +104,130 @@ async function initialize() {
         loadData();
 
     } catch (error) {
-        log('Failed to load game IDs', error.message); 
+        log('Failed to load game IDs', error.message);
     }
 };
 
-async function idFilter(page, perPage) {
-    const startIdx = (page - 1) * perPage;
-    let currentIdx = startIdx;
-    const validIDs = [];
-    let attempts = 0;
-    const maxAttempts = perPage * 5;
+async function gameFilter(page, perPage) {
+    let startIdx = (page - 1) * perPage;
+    log(startIdx)
+    let validIDs = [];
 
-    while (validIDs.length < perPage && attempts < maxAttempts && currentIdx < gameAppId.length) {
-        attempts++;
-        const appID = gameAppId[currentIdx];
-        currentIdx++;
 
-        try {
-            if (ignoreSet.has(appID)) {
+    while (validIDs.length < perPage) {
+        if (startIdx < actualGames.length) {
+            const appID = actualGames[startIdx];
+            startIdx++;
+
+            if (ignoreSet.has(appID) || dlcSet.has(appID)) {
                 continue;
-            }
+            } 
 
             const gameCached = myCache.get(`game_${appID}`);
-            const dlcCached = myCache.get(`dlc_${appID}`);
 
             if (gameCached) {
                 validIDs.push(gameCached.data);
                 continue;
             }
 
-            if (dlcCached) {
-                validIDs.push(dlcCached.data);
+            try {
+                const response = await axios.get(steam_API_details + appID);
+                const result = response.data[appID];
+                const gameData = result.data;
+
+                if (actualSet.has(appID)) {
+                    myCache.set(`game_${appID}`, {
+                        data: gameData
+                    }, 3600);
+                    validIDs.push(gameData);
+                    log(chalk.green(`Game AH: ${appID}`));
+                    continue;
+                }
+
+                if (dlcGames.includes(appID)) {
+                    myCache.set(`dlc_${appID}`, {
+                        data: gameData
+                    }, 3600);
+                    // validIDs.push(gameData);
+                    log(chalk.blue(`DLC AH: ${appID}`));
+                    continue;
+                }
+
+            } catch (error) {
+                log(`Error processing ${appID}:`, error.message);
+                myCache.set(`game_${appID}`, {
+                    valid: false
+                }, 3600);
+            }
+
+        } else if (startIdx < gameAppId.length) {
+
+            const appID = gameAppId[startIdx];
+            startIdx++;
+
+            if (ignoreSet.has(appID) || dlcSet.has(appID)) {
+                continue;
+            } 
+
+            const gameCached = myCache.get(`game_${appID}`);
+
+            if (gameCached) {
+                validIDs.push(gameCached.data);
                 continue;
             }
 
-            const response = await axios.get(steam_API_details + appID);
-            const result = response.data[appID];
-            const gameData = result.data;
-            
-            if (actualGames.includes(appID)) {
-                myCache.set(`game_${appID}`, {data: gameData}, 3600);
-                validIDs.push(gameData);
-                log(chalk.green(`Game AH: ${appID}`));
-                continue;
+            try {
+                const response = await axios.get(steam_API_details + appID);
+                const result = response.data[appID];
+                const gameData = result.data;
+
+                if (!result.success) {
+                    myCache.set(`ignore_${appID}`, 3600);
+                    ignoreID.push(appID);
+                    ignoreSet.add(appID);
+                    log(chalk.bgRed(`Ignore ID: ${appID}`));
+                    continue;
+                }
+                if (gameData.type === 'dlc') {
+                    myCache.set(`dlc_${appID}`, {
+                        data: gameData
+                    }, 3600);
+                    // validIDs.push(gameData);
+                    dlcGames.push(appID);
+                    dlcSet.add(appID);
+                    log(chalk.bgBlue(`DLC: ${dlcGames.length}`));
+                    continue;
+                }
+
+                if (gameData.type === 'game') {
+                    myCache.set(`game_${appID}`, {
+                        data: gameData
+                    }, 3600);
+                    validIDs.push(gameData);
+                    actualGames.push(appID);
+                    actualSet.add(appID);
+                    log(chalk.bgGreen(`Games: ${actualGames.length}`));
+                    continue;
+                }
+            } catch (error) {
+                log(`Error processing ${appID}:`, error.message);
+                myCache.set(`game_${appID}`, {
+                    valid: false
+                }, 3600);
             }
-
-            if (dlcGames.includes(appID)) {
-                myCache.set(`dlc_${appID}`, {data: gameData}, 3600);
-                validIDs.push(gameData);
-                log(chalk.blue(`DLC AH: ${appID}`));
-                continue;
-            }
-
-            if (!result.success) {
-                myCache.set(`ignore_${appID}`, 3600);
-                ignoreID.push(appID);
-                ignoreSet.add(appID);
-                log(chalk.bgRed(`Ignore ID: ${appID}`));
-
-            } else if (gameData.type === 'dlc') {
-                myCache.set(`dlc_${appID}`, {data: gameData} , 3600);
-                validIDs.push(gameData);
-                dlcGames.push(appID);
-                dlcSet.add(appID);
-                log(chalk.bgBlue(`DLC: ${dlcGames.length}`));
-
-            } else {
-                myCache.set(`game_${appID}`, {data: gameData}, 3600);
-                validIDs.push(gameData);
-                actualGames.push(appID);
-                actualSet.add(appID);
-                log(chalk.bgGreen(`Games: ${actualGames.length}`));
-            }
-        } catch (error) {
-            log(`Error processing ${appID}:`, error.message);
-            myCache.set(`game_${appID}`, {valid: false}, 3600);
         }
 
     }
-
+    log(`Valid ID: ${validIDs.length}`)
     return validIDs.slice(0, perPage);
 };
 
 app.get('/', async (req, res) => {
-    
+
     try {
         const page = parseInt(req.query.page) || 1;
-        const perPage = 25;
-        const games = await idFilter(page, perPage);
+        const perPage = 20;
+        const games = await gameFilter(page, perPage);
         const totalPages = Math.ceil(actualGames.length / perPage);
 
         const hasPrevious = page > 1;
@@ -213,7 +256,7 @@ app.get('/detail', (req, res) => {
     res.render('detail')
 });
 
-app.get('/dev-tool-cache', (req, res) => {
+app.get('/dev-tool', (req, res) => {
     const stats = myCache.getStats();
     res.json({
         keys: myCache.keys(),
@@ -239,23 +282,23 @@ process.on('SIGTERM', cleanExit);
 async function serverStartup() {
     try {
         log(chalk.bgYellow.bold('\n Please wait while server is loading... '));
-        
+
         await initialize();
 
         app.listen(port, () => {
-            log(chalk.green.bold("\n===============================\n"));
+            log(chalk.green.bold("\n==============================="));
 
             log(chalk.green('Server is running on PORT:'), port);
 
-            log(chalk.green.bold("\n===============================\n"));
+            log(chalk.green.bold("==============================="));
 
             log(chalk.green('Total Game Ids: ') + chalk.yellow.bold(gameAppId.length));
 
             log(chalk.green('Current Game Ids: ') + chalk.yellow(actualGames.length));
 
-            log(chalk.green('Current DLC Ids: ')+ chalk.yellow(dlcGames.length));
+            log(chalk.green('Current DLC Ids: ') + chalk.yellow(dlcGames.length));
 
-            log(chalk.green.bold("\n============== ") + chalk.red.bold('x') + chalk.green.bold(" ==============\n"));
+            log(chalk.green.bold("============== ") + chalk.red.bold('x') + chalk.green.bold(" ==============\n"));
         })
 
     } catch (error) {
