@@ -4,29 +4,55 @@
 <div class="container">
     <% games.forEach(game => { %>
     <li class="item">
-        <div class="content">
-            <h2 class="game-title"><%= game.name %></h2>
-        </div>
+        <div class="container-item">
+            <div class="content">
+                <img class="game-image" src="<%= game.header_image %>"
+                    onerror="this.src='https://via.placeholder.com/250x93?text=No+Image';">
 
-        <div class="content">
-            <img class="game-image" src="<%= game.header_image %>" width="200">
+            </div>
+            <div class="content">
+                <h2 class="game-title"><%= game.name %></h2>
+            </div>
+            <div class="content">
+                <% if (game.is_free) { %>
+                <p class="game-price">
+                    <span class="game-price__price">
+                        Free
+                    </span>
+                </p>
 
-        </div>
-        <div class="content">
-            <% if (game.is_free) { %>
-            <p class="game-price">Free</p>
-
-            <% } else if (game.price_overview) { %>
+                <% } else if (game.price_overview) { %>
                 <% if (game.price_overview.discount_percent > 0) { %>
-                    <p class="game-price"><span>-<%= game.price_overview.discount_percent %>%</span> <%= game.price_overview.final_formatted %></p>
+                <% let colorClass = game.price_overview.discount_percent <= 25 ? 'game-price__discount-red': 
+                                    game.price_overview.discount_percent <= 50 ? 'game-price__discount-yellow':
+                                    game.price_overview.discount_percent <= 100 ? 'game-price__discount-green': '';
+                %>
+                <p class="game-price">
+                    <span class="<%= colorClass %>">
+                        -<%= game.price_overview.discount_percent %>%
+                    </span>
+                    <span class="game-price__price">
+                        <%= game.price_overview.final_formatted %>
+                    </span>
+                </p>
                 <% } else { %>
-                    <p class="game-price"><%= game.price_overview.final_formatted %></p>
+                <p class="game-price">
+                    <span class="game-price__price">
+                        <%= game.price_overview.final_formatted %>
+                    </span>
+                </p>
                 <% } %>
-            <% } else { %>
-            <p class="game-price">N/A</p>
-            <% } %>
+                <% } else { %>
+                <p class="game-price">
+                    <span class="game-price__price">
+                        N/A
+                    </span>
+                </p>
+                <% } %>
 
+            </div>
         </div>
+
     </li>
     <% }) %>
 </div>
