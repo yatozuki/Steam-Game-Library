@@ -34,10 +34,11 @@ let actualGames = [];
 let dlcGames = [];
 let ignoreID = [];
 
-
 let actualSet = new Set();
 let dlcSet = new Set();
 let ignoreSet = new Set();
+
+const Delay_MS = 200;
 
 function loadData() {
     try {
@@ -119,6 +120,8 @@ async function gameFilter(page, perPage) {
             const appID = actualGames[startIdx];
             startIdx++;
 
+            await new Promise(resolve => setTimeout(resolve, Delay_MS));
+
             if (ignoreSet.has(appID) || dlcSet.has(appID)) {
                 continue;
             } 
@@ -155,15 +158,13 @@ async function gameFilter(page, perPage) {
 
             } catch (error) {
                 log(`Error processing ${appID}:`, error.message);
-                myCache.set(`game_${appID}`, {
-                    valid: false
-                }, 3600);
             }
 
         } else if (startIdx < gameAppId.length) {
-
             const appID = gameAppId[startIdx];
             startIdx++;
+
+            await new Promise(resolve => setTimeout(resolve, Delay_MS));
 
             if (ignoreSet.has(appID) || dlcSet.has(appID)) {
                 continue;
@@ -211,24 +212,19 @@ async function gameFilter(page, perPage) {
                 }
             } catch (error) {
                 log(`Error processing ${appID}:`, error.message);
-                myCache.set(`game_${appID}`, {
-                    valid: false
-                }, 3600);
             }
         }
-
     }
     log(`Valid ID: ${validIDs.length}`)
     return validIDs.slice(0, perPage);
 };
 
 app.get('/', async (req, res) => {
-
     try {
         const page = parseInt(req.query.page) || 1;
         const perPage = 20;
         const games = await gameFilter(page, perPage);
-        const totalPages = Math.ceil(actualGames.length / perPage);
+        const totalPages = Math.ceil(gameAppId.length / perPage);
 
         const hasPrevious = page > 1;
         const hasNext = page < totalPages;
