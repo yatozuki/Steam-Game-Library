@@ -19,6 +19,8 @@ const myCache = new NodeCache({
     checkperiod: 2000
 });
 
+const Delay_MS = 200;
+
 const steam_API = 'https://api.steampowered.com/ISteamApps/GetAppList/v2/';
 const steam_API_details = 'https://store.steampowered.com/api/appdetails?appids=';
 
@@ -37,8 +39,6 @@ let ignoreID = [];
 let actualSet = new Set();
 let dlcSet = new Set();
 let ignoreSet = new Set();
-
-const Delay_MS = 200;
 
 function loadData() {
     try {
@@ -248,7 +248,7 @@ app.get('/', async (req, res) => {
     }
 });
 
-app.get('/detail', (req, res) => {
+app.get('/game/:id', (req, res) => {
     res.render('detail')
 });
 
