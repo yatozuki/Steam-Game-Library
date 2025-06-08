@@ -1,0 +1,102 @@
+/* Main Content (Main Page) */
+.container {
+    margin: 50px 30px 0 30px;
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    flex-direction: row;
+    row-gap: 50px;
+    column-gap: 25px;
+}
+
+.item {
+    align-content: start;
+    list-style-type: none;
+    border-radius: 5%;
+    background: #1b2838;
+    width: 250px;
+    height: 265px;
+
+}
+
+.item a {
+    text-decoration: none;
+    color: inherit;
+    transition: color 0.3s ease;
+}
+
+.item a:hover {
+    color: #e8e8e8;
+}
+
+.game-title {
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+.game-image {
+    width: 250px;
+    height: 150px;
+    border-top-left-radius: 5%;
+    border-top-right-radius: 5%;
+}
+
+.game-price {
+    text-align: center;
+    font-size: 1rem;
+    font-weight: bold;
+    padding: 3px 0;
+}
+
+.game-price__discount-red {
+    color: #ff0000;
+    background-color: #2c0000;
+    padding: 5px 3px 5px 8px;
+    border-top-left-radius: 5%;
+    border-bottom-left-radius: 5%;
+}
+
+.game-price__discount-yellow {
+    color: #ffe175;
+    background-color: #926a41;
+    padding: 5px 3px 5px 8px;
+    border-top-left-radius: 5%;
+    border-bottom-left-radius: 5%;
+}
+
+.game-price__discount-green {
+    color: #cef89c;
+    background-color: #3f5e2d;
+    padding: 5px 3px 5px 8px;
+    border-top-left-radius: 10%;
+    border-bottom-left-radius: 10%;
+}
+
+.game-price__price {
+    background-color: #1b1e25;
+    padding: 5px 8px;
+    border-top-right-radius: 10%;
+    border-bottom-right-radius: 10%;
+}
+
+/* Pagination */
+.pagination { 
+    display: flex;
+    justify-content: center;
+}
+
+.pagination a {
+    margin: 50px 5px;
+    text-decoration: none;
+    text-align: center;
+    font-weight: bold;
+    align-content: center;
+    flex-basis: content;
+
+}
+
+.dot {
+    font-size: 1.5rem;
+    font-weight: bold;
+    align-self: center;
+}
