@@ -3,10 +3,10 @@
     <div class="nav-bar">
         <a class="web-title" href="/">Steam Game Library</a>
 
-        <div class="search_container">
-            <input type="text" class="search-bar" placeholder="Search for games...">
+        <form action="/search" method="get" class="search_container">
+            <input type="text" name="q" class="search-bar" placeholder="Search for games..." value="<%= query || '' %>">
             <button class="btn" type="submit"><i class="fa-solid fa-magnifying-glass"></i></button>
-        </div>
+        </form>    
     </div>
 
 </header>
