@@ -20,6 +20,7 @@ const myCache = new NodeCache({
 });
 
 const Delay_MS = 200;
+const perPage = 20;
 
 const steam_API = 'https://api.steampowered.com/ISteamApps/GetAppList/v2/';
 const steam_API_details = 'https://store.steampowered.com/api/appdetails?appids=';
@@ -124,7 +125,7 @@ async function gameFilter(page, perPage) {
 
             if (ignoreSet.has(appID) || dlcSet.has(appID)) {
                 continue;
-            } 
+            }
 
             const gameCached = myCache.get(`game_${appID}`);
 
@@ -168,7 +169,7 @@ async function gameFilter(page, perPage) {
 
             if (ignoreSet.has(appID) || dlcSet.has(appID)) {
                 continue;
-            } 
+            }
 
             const gameCached = myCache.get(`game_${appID}`);
 
@@ -222,7 +223,6 @@ async function gameFilter(page, perPage) {
 app.get('/', async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
-        const perPage = 20;
         const games = await gameFilter(page, perPage);
         const totalPages = Math.ceil(gameAppId.length / perPage);
 
@@ -231,7 +231,10 @@ app.get('/', async (req, res) => {
 
         // log(chalk.green('Current Game Ids: ') + chalk.yellow(actualGames));
 
+        const searchQuery = req.query.q?.trim().toLowerCase() || '';
+
         res.render('home', {
+            query: searchQuery,
             games: games,
             currentPage: page,
             totalPages: totalPages,
@@ -248,7 +251,91 @@ app.get('/', async (req, res) => {
     }
 });
 
-app.get('/game/:id', (req, res) => {
+async function searchFilter(query) {
+    const results = [];
+    let count = 0;
+    const maxSearch = 3;
+    
+    for (const appID of gameAppId) {
+        if (count >= maxSearch) break;
+        
+        try {
+            const cached = myCache.get(`game_${appID}`);
+            if (cached) continue;
+            
+            const response = await axios.get(steam_API_details + appID);
+            const result = response.data[appID];
+            
+            if (result?.success && result.data?.type === 'game') {
+                const gameData = result.data;
+                if (gameData.name.toLowerCase().includes(query)) {
+                    results.push(gameData);
+                }
+                myCache.set(`game_${appID}`, { data: gameData }, 3600);
+            }
+            count++;
+        } catch (error) {
+            log(chalk.yellow(`Search error for ${appID}:`, error.message));
+        }
+    }
+    
+    return results;
+}
+
+app.get('/search', async (req, res) => {
+    try {
+        const cachedResults = [];
+
+        const page = parseInt(req.query.page) || 1;
+        const totalPages = Math.ceil(cachedResults.length / perPage);
+
+        const hasPrevious = page > 1;
+        const hasNext = page < totalPages;
+
+        const searchQuery = req.query.q?.trim().toLowerCase() || '';
+
+        if (!searchQuery || searchQuery.length < 3) {
+            return res.render('search', {
+                results: [],
+                query: searchQuery,
+                message: 'Please enter at least 3 characters'
+            });
+        }
+
+        for (const appID of gameAppId) {
+            const cached = myCache.get(`game_${appID}`);
+            if (cached) {
+                if (cached.data.name.toLowerCase().includes(searchQuery)) {
+                    cachedResults.push(cached.data);
+                }
+            }
+        }
+
+        if (cachedResults.length < 10) {
+            const searchResults = await searchFilter(searchQuery);
+            cachedResults.push(...searchResults);
+        }
+
+        res.render('search', {
+            results: cachedResults.slice(0, perPage),
+            query: searchQuery,
+            currentPage: page,
+            totalPages: totalPages,
+            hasPrevious: hasPrevious,
+            hasNext: hasNext
+        });
+
+    } catch (error) {
+        log(chalk.bgRed('Search error', error.message));
+        res.render('error', {
+            message: 'Search failed',
+            error: error.message
+        });
+    }
+
+});
+
+app.get('/game/:id', async (req, res) => {
     res.render('detail')
 });
 
