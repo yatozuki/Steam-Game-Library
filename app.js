@@ -137,18 +137,11 @@ async function initialize() {
 
 async function gameFilter(page, perPage) {
     let startIdx = (page - 1) * perPage;
-    log(startIdx)
+    log(startIdx);
+    let endIdx = startIdx + perPage;
     let validIDs = [];
 
     function isDuplicateGame(gameData) {
-        const normalizedNewName = gameData.name.toLowerCase().trim();
-        return detailInfo.some(game => 
-
-            game.name.toLowerCase().trim() === normalizedNewName
-        );
-    }
-
-    function isOnCurrentPage(gameData) {
         const normalizedNewName = gameData.name.toLowerCase().trim();
         return validIDs.some(game => 
             game.steam_appid === gameData.steam_appid || 
@@ -156,51 +149,116 @@ async function gameFilter(page, perPage) {
         );
     }
 
+      function isOnPreviousPages(gameData) {
+        const normalizedName = gameData.name.toLowerCase().trim();
+        return detailInfo.some(game => 
+            (game.steam_appid === gameData.steam_appid || 
+             game.name.toLowerCase().trim() === normalizedName)
+        );
+    }
+
     while (validIDs.length < perPage) {
-            let appID;
-            let isFromActualGames = false;
-
-            if (startIdx < actualGames.length) {
-                appID = actualGames[startIdx];
-                isFromActualGames = true;
-            } 
-            else if (startIdx < gameAppId.length) {
-                appID = gameAppId[startIdx];
-            } 
-            else {
-                break;
-            }
-
+        if (startIdx < actualGames.length) {
+            const appID = actualGames[startIdx];
             startIdx++;
 
-            if (ignoreSet.has(appID) || dlcSet.has(appID) || skipSet.has(appID)) {
-                continue;
-            }
+            if (ignoreSet.has(appID) || dlcSet.has(appID) || skipSet.has(appID)) continue; 
 
-            const gameCached = myCache.get(`game_${appID}`);
-            if (gameCached) {
-                if (!isOnCurrentPage(gameCached.data)) {
-                validIDs.push(gameCached.data);
-                log(chalk.green(`[CACHE] Added game: ${appID}`));
+            // const gameCached = myCache.get(`game_${appID}`);
+            
+            // if (gameCached) {
+            //     if (!isDuplicateGame(gameCached.data)) {
+            //         validIDs.push(gameCached.data);
+            //         log(chalk.green(`[CACHE] Added game: ${appID}`));
+            //     }
+            //     continue;
+            // }
+
+            const existingDetail = detailInfo.find(game => game.steam_appid === appID);
+
+            if (existingDetail) {             
+                if (detailInfo.length < endIdx && isOnPreviousPages(existingDetail)) {
+                    log(chalk.yellow(`Skipping (Previous page): ${existingDetail.name}. ID: ${appID}`));
+                    continue;
                 }
-                continue;
-            }
 
-            const existingDetail = detailInfo.find(item => item.steam_appid === appID);
-
-            if (existingDetail) {
-                if (!isOnCurrentPage(existingDetail)) {
+                if (!isDuplicateGame(existingDetail)) {
                     validIDs.push(existingDetail);
-                    // myCache.set(`game_${appID}`, { data: existingDetail }, 3600);
+                    myCache.set(`game_${appID}`, { data: existingDetail }, 3600);
                     log(chalk.green(`[STORAGE] Loaded existing game: ${appID}`));
                 }
+
                 continue;
             }
+
             try {
                 const response = await axios.get(steam_API_details + appID);
                 const result = response.data[appID];
                 const gameData = result.data;
-                
+
+                if (gameData.type === 'game') {
+                    if (isDuplicateGame(gameData)) {
+                        skipID.push(appID);
+                        skipSet.add(appID);
+                        log(chalk.yellow(`Skipping game: ${gameData.name} (ID: ${appID})`));
+                        continue;
+                    }
+                }
+
+                if (actualSet.has(appID)) {
+                    myCache.set(`game_${appID}`, { data: gameData }, 3600);
+
+                    if (!detailInfo.some(game => game.steam_appid === appID)) {
+                        detailInfo.push(gameData);
+                    }
+
+                    validIDs.push(gameData);
+                    log(chalk.green(`Game: ${appID}`));
+
+                }
+
+            } catch (error) {
+                log(`Error processing ${appID}:`, error.message);
+            }
+
+        } else if (startIdx < gameAppId.length) {
+            const appID = gameAppId[startIdx];
+            startIdx++;
+
+            if (ignoreSet.has(appID) || dlcSet.has(appID) || skipSet.has(appID)) continue; 
+
+            // const gameCached = myCache.get(`game_${appID}`);
+            
+            // if (gameCached) {
+            //     if (!isDuplicateGame(gameCached.data)) {
+            //     validIDs.push(gameCached.data);
+            //     log(chalk.green(`[CACHE] Added game: ${appID}`));
+            //     }
+            //     continue;
+            // }
+
+            const existingDetail = detailInfo.find(game => game.steam_appid === appID);
+
+            if (existingDetail) {
+               if (detailInfo.length < endIdx && isOnPreviousPages(existingDetail)) {
+                    log(chalk.yellow(`Skipping (Previous page): ${existingDetail.name}. ID: ${appID}`));
+                    continue;
+                }
+
+                if (!isDuplicateGame(existingDetail)) {
+                    validIDs.push(existingDetail);
+                    myCache.set(`game_${appID}`, { data: existingDetail }, 3600);
+                    log(chalk.green(`[STORAGE] Loaded existing game: ${appID}`));
+                }
+
+                continue;
+            }
+
+            try {
+                const response = await axios.get(steam_API_details + appID);
+                const result = response.data[appID];
+                const gameData = result.data;
+
                 if (!result.success) {
                     ignoreID.push(appID);
                     ignoreSet.add(appID);
@@ -223,31 +281,24 @@ async function gameFilter(page, perPage) {
                         continue;
                     }
 
-                    if (isOnCurrentPage(gameData)) {
-                        log(chalk.yellow(`Skipping duplicate on page: ${gameData.name}`));
-                        continue;
-                }
                     myCache.set(`game_${appID}`, { data: gameData }, 3600);
-
-                    if (!actualSet.has(appID)) {
-                        actualGames.push(appID);
-                        actualSet.add(appID);
-                        log(chalk.bgGreen(`New Game Added: ${appID}`));
-                    }
-
-                    if (!detailInfo.some(game => game.steam_appid === appID)) {
-                        detailInfo.push(gameData);
-                    }
-
+                    actualGames.push(appID);
+                    actualSet.add(appID);
                     validIDs.push(gameData);
-                    log(chalk.green(`Game: ${appID}`));
+                    detailInfo.push(gameData);
+
+                    log(chalk.bgGreen(`New Game Added: ${appID}`));
                 }
+
             } catch (error) {
                 log(`Error processing ${appID}:`, error.message);
             }
         }
-    log(`Total game: ${validIDs.length}`)
-    return validIDs.slice(0, perPage);
+
+    }
+
+    log(`Total game: ${detailInfo.length}`);
+    return detailInfo.slice(Number((page - 1) * perPage), endIdx);
 };
 
 app.get('/', async (req, res) => {
