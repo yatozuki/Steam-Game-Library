@@ -5,9 +5,8 @@ import NodeCache from 'node-cache';
 import chalk from 'chalk';
 import fs from 'fs';
 import path from 'path';
-import {
-    fileURLToPath
-} from 'url';
+import { fileURLToPath } from 'url';
+import Fuse from 'fuse.js';
 
 const app = express();
 const __filename = fileURLToPath(
@@ -44,6 +43,9 @@ let dlcSet = new Set();
 let ignoreSet = new Set();
 let detailSet = new Set();
 let skipSet = new Set();
+
+let searchIndex = null;
+let gameDataMap = {};
 
 function loadData() {
     try {
@@ -177,10 +179,10 @@ async function gameFilter(page, perPage) {
             const existingDetail = detailInfo.find(game => game.steam_appid === appID);
 
             if (existingDetail) {             
-                if (detailInfo.length < endIdx && isOnPreviousPages(existingDetail)) {
-                    log(chalk.yellow(`Skipping (Previous page): ${existingDetail.name}. ID: ${appID}`));
-                    continue;
-                }
+                // if (isOnPreviousPages(existingDetail)) {
+                //     log(chalk.yellow(`Skipping (Previous page): ${existingDetail.name}. ID: ${appID}`));
+                //     continue;
+                // }
 
                 if (!isDuplicateGame(existingDetail)) {
                     validIDs.push(existingDetail);
@@ -240,15 +242,11 @@ async function gameFilter(page, perPage) {
             const existingDetail = detailInfo.find(game => game.steam_appid === appID);
 
             if (existingDetail) {
-               if (detailInfo.length < endIdx && isOnPreviousPages(existingDetail)) {
-                    log(chalk.yellow(`Skipping (Previous page): ${existingDetail.name}. ID: ${appID}`));
-                    continue;
-                }
 
                 if (!isDuplicateGame(existingDetail)) {
                     validIDs.push(existingDetail);
                     myCache.set(`game_${appID}`, { data: existingDetail }, 3600);
-                    log(chalk.green(`[STORAGE] Loaded existing game: ${appID}`));
+                    log(chalk.green(`[STORAGE] Loaded New game: ${appID}`));
                 }
 
                 continue;
@@ -282,10 +280,12 @@ async function gameFilter(page, perPage) {
                     }
 
                     myCache.set(`game_${appID}`, { data: gameData }, 3600);
+                    if (!detailInfo.some(game => game.steam_appid === appID)) {
+                        detailInfo.push(gameData);
+                    }
                     actualGames.push(appID);
                     actualSet.add(appID);
                     validIDs.push(gameData);
-                    detailInfo.push(gameData);
 
                     log(chalk.bgGreen(`New Game Added: ${appID}`));
                 }
@@ -294,12 +294,63 @@ async function gameFilter(page, perPage) {
                 log(`Error processing ${appID}:`, error.message);
             }
         }
-
     }
 
     log(`Total game: ${detailInfo.length}`);
-    return detailInfo.slice(Number((page - 1) * perPage), endIdx);
+    if (detailInfo.length >= endIdx) {
+        return detailInfo.slice(Number((page - 1) * perPage), endIdx);
+    } else {
+        return detailInfo.slice(Number(-perPage));
+    }
 };
+
+async function buildSearchIndex() {
+    const allCachedGames = [];
+    const cachedKeys = myCache.keys();
+    
+    for (const key of cachedKeys) {
+        if (key.startsWith('game_')) {
+            const cached = myCache.get(key);
+            if (cached?.valid) {
+                allCachedGames.push(cached.data);
+                gameDataMap[cached.data.steam_appid] = cached.data;
+            }
+        }
+    }
+
+    // Configure fuzzy search
+    const options = {
+        keys: ['name'],
+        threshold: 0.4, // More tolerant matching
+        includeScore: true
+    };
+    
+    searchIndex = new Fuse(allCachedGames, options);
+    log(chalk.green(`Built search index with ${allCachedGames.length} games`));
+}
+
+// More robust Steam store search
+async function searchSteamStore(query) {
+    try {
+        const response = await axios.get('https://store.steampowered.com/api/storesearch', {
+            params: {
+                term: query,
+                l: 'english',
+                cc: 'us'
+            }
+        });
+        
+        return response.data.items.map(item => ({
+            steam_appid: item.id,
+            name: item.name,
+            header_image: item.tiny_image || item.small_image || item.image
+        }));
+        
+    } catch (error) {
+        log(chalk.red('Steam store search error:', error));
+        return [];
+    }
+}
 
 app.get('/', async (req, res) => {
     try {
@@ -334,90 +385,97 @@ app.get('/', async (req, res) => {
     }
 });
 
-async function searchFilter(query) {
-    const results = [];
-    let count = 0;
-    const maxSearch = 3;
+// app.get('/search', async (req, res) => {
+//     try {
+//         const cachedResults = [];
 
-    for (const appID of gameAppId) {
-        if (count >= maxSearch) break;
+//         const page = parseInt(req.query.page) || 1;
+//         const totalPages = Math.ceil(cachedResults.length / perPage);
 
-        try {
-            const cached = myCache.get(`game_${appID}`);
-            if (cached) continue;
+//         const hasPrevious = page > 1;
+//         const hasNext = page < totalPages;
 
-            const response = await axios.get(steam_API_details + appID);
-            const result = response.data[appID];
+//         const searchQuery = req.query.q?.trim().toLowerCase() || '';
 
-            if (result.success && result.data.type === 'game') {
-                const gameData = result.data;
-                if (gameData.name.toLowerCase().includes(query)) {
-                    results.push(gameData);
-                }
-                myCache.set(`game_${appID}`, {
-                    data: gameData
-                }, 3600);
-            }
-            count++;
-        } catch (error) {
-            log(chalk.yellow(`Search error for ${appID}:`, error.message));
-        }
-    }
+//         if (!searchQuery || searchQuery.length < 3) {
+//             return res.render('search', {
+//                 results: [],
+//                 query: searchQuery,
+//                 message: 'Please enter at least 3 characters'
+//             });
+//         }
 
-    return results;
-}
+//         for (const appID of gameAppId) {
+//             const cached = myCache.get(`game_${appID}`);
+//             if (cached) {
+//                 if (cached.data.name.toLowerCase().includes(searchQuery)) {
+//                     cachedResults.push(cached.data);
+//                 }
+//             }
+//         }
+
+//         if (cachedResults.length < 10) {
+//             const searchResults = await searchFilter(searchQuery);
+//             cachedResults.push(...searchResults);
+//         }
+
+//         res.render('search', {
+//             results: cachedResults.slice(0, perPage),
+//             query: searchQuery,
+//             currentPage: page,
+//             totalPages: totalPages,
+//             hasPrevious: hasPrevious,
+//             hasNext: hasNext
+//         });
+
+//     } catch (error) {
+//         log(chalk.bgRed('Search error', error.message));
+//         res.render('error', {
+//             message: 'Search failed',
+//             error: error.message
+//         });
+//     }
+
+// });
 
 app.get('/search', async (req, res) => {
+    const query = req.query.q?.trim();
+    
+    if (!query || query.length < 2) {
+        return res.render('search', {
+            query,
+            results: [],
+            message: 'Please enter at least 2 characters'
+        });
+    }
+
     try {
-        const cachedResults = [];
+        const fuseResults = searchIndex.search(query);
+        const instantResults = fuseResults.slice(0, 50).map(r => r.item);
 
-        const page = parseInt(req.query.page) || 1;
-        const totalPages = Math.ceil(cachedResults.length / perPage);
-
-        const hasPrevious = page > 1;
-        const hasNext = page < totalPages;
-
-        const searchQuery = req.query.q?.trim().toLowerCase() || '';
-
-        if (!searchQuery || searchQuery.length < 3) {
+        if (instantResults.length > 0) {
             return res.render('search', {
-                results: [],
-                query: searchQuery,
-                message: 'Please enter at least 3 characters'
+                query,
+                results: instantResults,
+                message: null
             });
         }
 
-        for (const appID of gameAppId) {
-            const cached = myCache.get(`game_${appID}`);
-            if (cached) {
-                if (cached.data.name.toLowerCase().includes(searchQuery)) {
-                    cachedResults.push(cached.data);
-                }
-            }
-        }
-
-        if (cachedResults.length < 10) {
-            const searchResults = await searchFilter(searchQuery);
-            cachedResults.push(...searchResults);
-        }
-
-        res.render('search', {
-            results: cachedResults.slice(0, perPage),
-            query: searchQuery,
-            currentPage: page,
-            totalPages: totalPages,
-            hasPrevious: hasPrevious,
-            hasNext: hasNext
+        const steamResults = await searchSteamStore(query);
+        return res.render('search', {
+            query,
+            results: steamResults.slice(0, 50),
+            message: null
         });
 
     } catch (error) {
-        log(chalk.bgRed('Search error', error.message));
-        res.render('error', {
+        log(chalk.red('Search error:', error));
+        return res.render('error', {
+            query,
             message: 'Search failed',
             error: error.message
         });
     }
-
 });
 
 app.get('/game/:id', async (req, res) => {
@@ -446,12 +504,17 @@ function cleanExit() {
 
 process.on('SIGINT', cleanExit);
 process.on('SIGTERM', cleanExit);
+process.on('uncaughtException', console.error);
+process.on('unhandledRejection', console.error);
+
+setInterval(buildSearchIndex, 3600000); 
 
 async function serverStartup() {
     try {
         log(chalk.bgYellow.bold('\n Please wait while server is loading... '));
 
         await initialize();
+        await buildSearchIndex();
 
         app.listen(port, () => {
             log(chalk.green.bold("\n==============================="));
