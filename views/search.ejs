@@ -1,28 +1,55 @@
 <%- include('partials/navbar.ejs') %>
 <%- include('partials/home/homeHeader.ejs') %>
 
-  <div class="search-header">
-        <h1>Search Results for "<%= query %>"</h1>
-        <form action="/search" method="get" class="search-form">
-            <input type="text" name="q" placeholder="Search games..." value="<%= query %>">
-            <button type="submit">Search Again</button>
-        </form>
-    </div>
+  <div class="search-container">
+        <div class="search-header">
+            <h1>Search Results for "<%= query %>"</h1>
+            
+            <form action="/search" method="get" class="search-form">
+                <input 
+                    type="text" 
+                    name="q" 
+                    placeholder="Search games..." 
+                    value="<%= query %>"
+                    required
+                    minlength="2"
+                >
+                <button type="submit">Search</button>
+            </form>
 
-    <% if (results.length > 0) { %>
-        <div class="search-results">
-            <% results.forEach(game => { %>
-                <a href="/detail/<%= game.steam_appid %>" class="game-card">
-                    <img src="<%= game.header_image %>" alt="<%= game.name %>">
-                    <h3><%= game.name %></h3>
-                </a>
-            <% }); %>
+            <% if (message) { %>
+                <div class="message <%= success ? '' : 'error' %>">
+                    <%= message %>
+                </div>
+            <% } %>
         </div>
-    <% } else { %>
-        <p class="no-results">No games found matching "<%= query %>"</p>
-    <% } %>
 
-    <a href="/">Back to all games</a>
+        <% if (results.length > 0) { %>
+            <div class="results-count">
+                Showing <%= results.length %> results
+            </div>
+            
+            <div class="game-grid">
+                <% results.forEach(game => { %>
+                    <a href="/detail/<%= game.steam_appid %>" class="game-card">
+                        <img 
+                            src="<%= game.header_image || '/images/default-game.jpg' %>" 
+                            alt="<%= game.name %>"
+                            onerror="this.src='/images/default-game.jpg'"
+                        >
+                        <h3><%= game.name %></h3>
+                    </a>
+                <% }); %>
+            </div>
+        <% } else if (query && query.length >= 2) { %>
+            <div class="message">
+                No games found matching "<%= query %>"
+            </div>
+        <% } %>
+
+        <div style="margin-top: 40px;">
+            <a href="/">← Back to all games</a>
+        </div>
 
 
 <!-- need pagination -->
