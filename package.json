@@ -16,11 +16,7 @@
     "ejs": "^3.1.10",
     "express": "^5.1.0",
     "fuse.js": "^7.1.0",
-    "node-cache": "^5.1.2"
-  },
-"overrides": {
-  "jake": "10.8.7",
-  "brace-expansion": "^4.0.1"
-}
-
+    "node-cache": "^5.1.2",
+    "puppeteer": "^24.10.1"
+  }
 }
