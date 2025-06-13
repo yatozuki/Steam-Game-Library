@@ -9,7 +9,7 @@
                                 onerror="this.src='https://placehold.jp/c0bfbc/ffffff/300x180.png?text=image';">
                         </div>
                         <div class="content">
-                            <h2 class="game-title"><%= game.name %></h2>
+                            <h2 class="game-title"><%= game.name.length > 47 ? game.name.substring(0, 47) + '...' : game.name %></h2>
                         </div>
                         <div class="content">
                             <% if (game.is_free) { %>
