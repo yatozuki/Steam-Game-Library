@@ -1,0 +1,83 @@
+<div class="container">
+    <% results.forEach(game => { %>
+        <% if (game) {%>
+            <li class="item">
+                <% if (game.steam_appid && !game.steam_appid.includes(',')) {%>
+                    <a href="/game/<%= game.steam_appid %>">
+                <% } else if (game.bundle_id && !game.bundle_id.includes(',')) { %>
+                    <a href="/game/<%= game.bundle_id %>">
+                <% } else { %>
+                    <a href="<%= game.url %>" target="_blank" rel="noopener">
+                <% } %>
+                    <div class="container-item">
+                        <div class="content">
+                            <img class="game-image" src="<%= game.header_image %>"
+                                onerror="this.src='https://placehold.jp/c0bfbc/ffffff/300x180.png?text=image';">
+                        </div>
+                        <div class="content">
+                            <h2 class="game-title"><%= game.name %></h2>
+                        </div>
+                        <div class="content">
+                            <% if (game.final_price == 'Free') { %>
+                            <p class="game-price">
+                                <span class="game-price__price">
+                                    Free
+                                </span>
+                            </p>
+
+                            <% } else if (game.original_price) { %>
+                                <% if (game.discount_percent > 0) { %>
+                                    <% let colorClass = game.discount_percent <= 40 ? 'game-price__discount-red': 
+                                            game.discount_percent <= 65 ? 'game-price__discount-yellow':
+                                            game.discount_percent <= 100 ? 'game-price__discount-green': '';
+                                    %>
+                                    <p class="game-price">
+                                        <span class="<%= colorClass %>">
+                                            -<%= game.discount_percent %>%
+                                        </span>
+                                        <span class="game-price__price">
+                                            <%= game.final_price %>
+                                        </span>
+                                    </p>
+                                <% } else { %>
+                                    <p class="game-price">
+                                        <span class="game-price__price">
+                                            <%= game.final_price %>
+                                        </span>
+                                    </p>
+                                <% } %>
+                            <% } else { %>
+                                <p class="game-price">
+                                    <span class="game-price__price">
+                                        N/A
+                                    </span>
+                                </p>
+                            <% } %>
+
+                        </div>
+                    </div>
+                </a>
+            </li>
+        <% } else { %>
+            <li class="item">
+                <div class="container-item">
+                    <div class="content">
+                        <img class="game-image" src="https://placehold.jp/c0bfbc/ffffff/300x180.png?text=image">
+                    </div>
+                    <div class="content">
+                        <h2 class="game-title">Not available</h2>
+                    </div>
+                    <div class="content">
+                        <p class="game-price">
+                            <span class="game-price__price">
+                                N/A
+                            </span>
+                        </p>
+
+                    </div>
+                </div>
+
+            </li>
+            <% } %>
+    <% }) %>
+</div>
