@@ -1,8 +1,23 @@
 <%- include('partials/home/homeHeader.ejs') %> 
 <%- include('partials/navbar.ejs') %>
 
-<h1>Something is wrong: Error</h1>
-<p><%= message %></p>
+
+<div class="container-err">
+    <button class="error-btn" onclick="history.back()">
+        <h1 class="item-err">Something is wrong!</h1>
+        <h3 class="item-err">
+            <span class="err-message"><%= message %></span>
+        </h3>
+        <h3 class="item-err">
+            <span class="error"><%= error %></span>
+        </h3>
+    </button>
+
+</div>
+
+
+
+
 
 <!-- change searchquery to query to access error page -->
 <%- include('partials/footer.ejs') %>
