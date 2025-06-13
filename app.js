@@ -6,7 +6,7 @@ import chalk from 'chalk';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import Fuse from 'fuse.js';
+import puppeteer from "puppeteer";
 
 const app = express();
 const __filename = fileURLToPath(
@@ -14,12 +14,13 @@ const __filename = fileURLToPath(
 const __dirname = path.dirname(__filename);
 const port = process.env.PORT || 3000;
 const myCache = new NodeCache({
-    stdTTL: 3600,
+    stdTTL: 86400,
     checkperiod: 2000
 });
 
 const Delay_MS = 200;
 const perPage = 20;
+
 
 const steam_API = 'https://api.steampowered.com/ISteamApps/GetAppList/v2/';
 const steam_API_details = 'https://store.steampowered.com/api/appdetails?appids=';
@@ -43,9 +44,6 @@ let dlcSet = new Set();
 let ignoreSet = new Set();
 let detailSet = new Set();
 let skipSet = new Set();
-
-let searchIndex = null;
-let gameDataMap = {};
 
 function loadData() {
     try {
@@ -151,14 +149,6 @@ async function gameFilter(page, perPage) {
         );
     }
 
-      function isOnPreviousPages(gameData) {
-        const normalizedName = gameData.name.toLowerCase().trim();
-        return detailInfo.some(game => 
-            (game.steam_appid === gameData.steam_appid || 
-             game.name.toLowerCase().trim() === normalizedName)
-        );
-    }
-
     while (validIDs.length < perPage) {
         if (startIdx < actualGames.length) {
             const appID = actualGames[startIdx];
@@ -179,14 +169,10 @@ async function gameFilter(page, perPage) {
             const existingDetail = detailInfo.find(game => game.steam_appid === appID);
 
             if (existingDetail) {             
-                // if (isOnPreviousPages(existingDetail)) {
-                //     log(chalk.yellow(`Skipping (Previous page): ${existingDetail.name}. ID: ${appID}`));
-                //     continue;
-                // }
 
                 if (!isDuplicateGame(existingDetail)) {
                     validIDs.push(existingDetail);
-                    myCache.set(`game_${appID}`, { data: existingDetail }, 3600);
+                    myCache.set(`game_${appID}`, { data: existingDetail }, 86400);
                     log(chalk.green(`[STORAGE] Loaded existing game: ${appID}`));
                 }
 
@@ -208,7 +194,7 @@ async function gameFilter(page, perPage) {
                 }
 
                 if (actualSet.has(appID)) {
-                    myCache.set(`game_${appID}`, { data: gameData }, 3600);
+                    myCache.set(`game_${appID}`, { data: gameData }, 86400);
 
                     if (!detailInfo.some(game => game.steam_appid === appID)) {
                         detailInfo.push(gameData);
@@ -245,7 +231,7 @@ async function gameFilter(page, perPage) {
 
                 if (!isDuplicateGame(existingDetail)) {
                     validIDs.push(existingDetail);
-                    myCache.set(`game_${appID}`, { data: existingDetail }, 3600);
+                    myCache.set(`game_${appID}`, { data: existingDetail }, 86400);
                     log(chalk.green(`[STORAGE] Loaded New game: ${appID}`));
                 }
 
@@ -279,7 +265,7 @@ async function gameFilter(page, perPage) {
                         continue;
                     }
 
-                    myCache.set(`game_${appID}`, { data: gameData }, 3600);
+                    myCache.set(`game_${appID}`, { data: gameData }, 86400);
                     if (!detailInfo.some(game => game.steam_appid === appID)) {
                         detailInfo.push(gameData);
                     }
@@ -304,145 +290,141 @@ async function gameFilter(page, perPage) {
     }
 };
 
-async function buildSearchIndex() {
-    const allCachedGames = [];
-    const cachedKeys = myCache.keys();
+async function scrapeSteamSearch(query, maxResults = 100) {
+    const cacheKey = `search_${query.toLowerCase().trim()}`;
     
-    for (const key of cachedKeys) {
-        if (key.startsWith('game_')) {
-            const cached = myCache.get(key);
-            if (cached?.valid) {
-                allCachedGames.push(cached.data);
-                gameDataMap[cached.data.steam_appid] = cached.data;
-            }
-        }
+    const cachedResults = myCache.get(cacheKey);
+    if (cachedResults) {
+        log(chalk.green(`Using cached results for: "${query}"`));
+        return cachedResults;
     }
 
-    // Configure fuzzy search
-    const options = {
-        keys: ['name'],
-        threshold: 0.4, // More tolerant matching
-        includeScore: true
-    };
+    const browser = await puppeteer.launch({
+        headless: "new",
+        args: ['--no-sandbox', '--disable-setuid-sandbox']
+    });
+    const page = await browser.newPage();
     
-    searchIndex = new Fuse(allCachedGames, options);
-    log(chalk.green(`Built search index with ${allCachedGames.length} games`));
-}
-
-// More robust Steam store search
-async function searchSteamStore(query) {
     try {
-        const response = await axios.get('https://store.steampowered.com/api/storesearch', {
-            params: {
-                term: query,
-                l: 'english',
-                cc: 'us'
+        await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+    
+    await page.goto(`https://store.steampowered.com/search/?term=${encodeURIComponent(query)}`, {
+        waitUntil: 'networkidle2',
+        timeout: 30000
+    });
+    
+    await page.waitForSelector('#search_resultsRows');
+    
+    let results = [];
+    let previousHeight;
+    let attempts = 0;
+    const maxAttempts = 1;
+    
+    while (attempts < maxAttempts && results.length < maxResults) {
+
+        const newResults = await page.evaluate(() => {
+            const items = [];
+            document.querySelectorAll('#search_resultsRows a').forEach(item => {
+                const appId = item.getAttribute('data-ds-appid');
+                const bundleId = item.getAttribute('data-ds-bundleid');
+
+                const originalImgUrl = appId ? `https://cdn.akamai.steamstatic.com/steam/apps/${appId}/header.jpg` : null;
+                const altImgUrl = item.querySelector('img')?.src.replace(/capsule_sm_120\.jpg/g, 'header.jpg');
+                    
+                const discountText = item.querySelector('.discount_pct')?.innerText.trim();
+                const discountPercent = discountText ? parseInt(discountText.replace(/[%-]/g, ''), 10) : 0;
+
+                const finalPrice = item.querySelector('.discount_final_price')?.innerText.trim();
+                items.push({
+                    steam_appid: appId,
+                    bundle_id: bundleId,
+                    name: item.querySelector('.title')?.innerText.trim(),
+                    original_price: item.querySelector('.discount_original_price')?.innerText.trim() || finalPrice,
+                    final_price: finalPrice,
+                    discount_percent: discountPercent,
+                    header_image: originalImgUrl || altImgUrl,
+                    url: item.href,
+                });
+            });
+            return items;
+        });
+        
+        newResults.forEach(item => {
+            if (!results.some(existing => existing.url === item.url)) {
+                results.push(item);
             }
         });
         
-        return response.data.items.map(item => ({
-            steam_appid: item.id,
-            name: item.name,
-            header_image: item.tiny_image || item.small_image || item.image
-        }));
+        previousHeight = await page.evaluate('document.body.scrollHeight');
+        await page.evaluate('window.scrollTo(0, document.body.scrollHeight)');
         
-    } catch (error) {
-        log(chalk.red('Steam store search error:', error));
-        return [];
+        await page.waitForFunction(`document.body.scrollHeight > ${previousHeight}`, {
+            timeout: 5000
+        }).catch(() => {
+            log('No more results loading');
+            attempts++;
+        });
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+
+        await page.waitForNetworkIdle();
+
+        log(`Found ${results.length} results`)
     }
+    
+    log(chalk.yellow(`Total results for "${query}": ${results.length}`));
+    // log(results)
+    myCache.set(cacheKey, results, 86400);
+
+    return results;
+
+    } catch (error) {
+        log(chalk.red(`Scraping error for "${query}":`, error));
+        throw error;
+    } finally {
+        await browser.close();
+    }
+    
 }
 
 app.get('/', async (req, res) => {
+    const query = req.query.q?.trim().toLowerCase() || '';
+
     try {
         const page = parseInt(req.query.page) || 1;
         const totalPages = Math.ceil(gameAppId.length / perPage);
 
-        const hasPrevious = page > 1;
-        const hasNext = page < totalPages;
-
-        const searchQuery = req.query.q?.trim().toLowerCase() || '';
-
         const games = await gameFilter(page, perPage);
 
         res.render('home', {
-            query: searchQuery,
+            query,
             games: games,
             currentPage: page,
-            totalPages: totalPages,
-            hasPrevious: hasPrevious,
-            hasNext: hasNext
+            totalPages,
+            hasPrevious: page > 1,
+            hasNext: page < totalPages
         });
         
 
     } catch (error) {
-        const searchQuery = req.query.q?.trim().toLowerCase() || '';
         log(chalk.bgRed('Page error', error.message));
         res.render('error', {
-            query: searchQuery,
+            query,
             message: 'Sorry, something went wrong',
             error: error.message
         });
     }
 });
 
-// app.get('/search', async (req, res) => {
-//     try {
-//         const cachedResults = [];
-
-//         const page = parseInt(req.query.page) || 1;
-//         const totalPages = Math.ceil(cachedResults.length / perPage);
-
-//         const hasPrevious = page > 1;
-//         const hasNext = page < totalPages;
-
-//         const searchQuery = req.query.q?.trim().toLowerCase() || '';
-
-//         if (!searchQuery || searchQuery.length < 3) {
-//             return res.render('search', {
-//                 results: [],
-//                 query: searchQuery,
-//                 message: 'Please enter at least 3 characters'
-//             });
-//         }
-
-//         for (const appID of gameAppId) {
-//             const cached = myCache.get(`game_${appID}`);
-//             if (cached) {
-//                 if (cached.data.name.toLowerCase().includes(searchQuery)) {
-//                     cachedResults.push(cached.data);
-//                 }
-//             }
-//         }
-
-//         if (cachedResults.length < 10) {
-//             const searchResults = await searchFilter(searchQuery);
-//             cachedResults.push(...searchResults);
-//         }
-
-//         res.render('search', {
-//             results: cachedResults.slice(0, perPage),
-//             query: searchQuery,
-//             currentPage: page,
-//             totalPages: totalPages,
-//             hasPrevious: hasPrevious,
-//             hasNext: hasNext
-//         });
-
-//     } catch (error) {
-//         log(chalk.bgRed('Search error', error.message));
-//         res.render('error', {
-//             message: 'Search failed',
-//             error: error.message
-//         });
-//     }
-
-// });
-
 app.get('/search', async (req, res) => {
-    const query = req.query.q?.trim();
-    
+    const page = parseInt(req.query.page) || 1;
+    const query = req.query.q?.trim().toLowerCase() || '';
+    let startIdx = (page - 1) * perPage;
+    let endIdx = startIdx + perPage;
+
     if (!query || query.length < 2) {
         return res.render('search', {
+            success: true,
             query,
             results: [],
             message: 'Please enter at least 2 characters'
@@ -450,27 +432,26 @@ app.get('/search', async (req, res) => {
     }
 
     try {
-        const fuseResults = searchIndex.search(query);
-        const instantResults = fuseResults.slice(0, 50).map(r => r.item);
+        const steamResults = await scrapeSteamSearch(query, 50);
+        const totalPages = Math.ceil(steamResults.length / perPage);
+        const hasPrevious = page > 1;
+        const hasNext = page < totalPages;
 
-        if (instantResults.length > 0) {
-            return res.render('search', {
-                query,
-                results: instantResults,
-                message: null
-            });
-        }
-
-        const steamResults = await searchSteamStore(query);
         return res.render('search', {
+            success: true,
             query,
-            results: steamResults.slice(0, 50),
-            message: null
+            results: steamResults.slice(Number((page - 1) * perPage), endIdx),
+            message: null,
+            currentPage: page,
+            totalPages,
+            hasPrevious,
+            hasNext
         });
 
     } catch (error) {
         log(chalk.red('Search error:', error));
         return res.render('error', {
+            success: false,
             query,
             message: 'Search failed',
             error: error.message
@@ -507,14 +488,11 @@ process.on('SIGTERM', cleanExit);
 process.on('uncaughtException', console.error);
 process.on('unhandledRejection', console.error);
 
-setInterval(buildSearchIndex, 3600000); 
-
 async function serverStartup() {
     try {
         log(chalk.bgYellow.bold('\n Please wait while server is loading... '));
 
         await initialize();
-        await buildSearchIndex();
 
         app.listen(port, () => {
             log(chalk.green.bold("\n==============================="));
