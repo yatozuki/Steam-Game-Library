@@ -6,7 +6,8 @@ import chalk from 'chalk';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import puppeteer from "puppeteer";
+import puppeteer from 'puppeteer-extra'
+import StealthPlugin from 'puppeteer-extra-plugin-stealth'
 
 const app = express();
 const __filename = fileURLToPath(
@@ -44,6 +45,16 @@ let dlcSet = new Set();
 let ignoreSet = new Set();
 let detailSet = new Set();
 let skipSet = new Set();
+
+function time() {
+    const now = new Date();
+    const hours = now.getHours();
+    const minutes = now.getMinutes();
+    const seconds = now.getSeconds();
+
+    // Format as "X h: Y m: Z s" (24-hour format)
+    return `${hours}h: ${minutes}m: ${seconds}s`;
+}
 
 function loadData() {
     try {
@@ -299,13 +310,24 @@ async function gameFilter(page, perPage) {
 };
 
 async function scrapeSteamSearch(query, maxResults = 100) {
+    let results = [];
+    let previousHeight;
+    let attempts = 0;
+    const maxAttempts = 1;
+
     const cacheKey = `search_${query.toLowerCase().trim()}`;
     
     const cachedResults = myCache.get(cacheKey);
     if (cachedResults) {
-        log(chalk.green(`Using cached results for: "${query}"`));
+        log(chalk.green(`Cached results for: "${query}"`));
         return cachedResults;
     }
+    
+    log(chalk.yellow(`[${time()}] Activating stealth mode...`));
+
+    puppeteer.use(StealthPlugin())
+
+    log(chalk.yellow(`[${time()}] Launching headless browser...`));
 
     const browser = await puppeteer.launch({
         headless: "new",
@@ -314,82 +336,92 @@ async function scrapeSteamSearch(query, maxResults = 100) {
     const page = await browser.newPage();
     
     try {
+        log(chalk.yellow(`[${time()}] Preparing to scrape...`));
+
         await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
     
-    await page.goto(`https://store.steampowered.com/search/?term=${encodeURIComponent(query)}`, {
-        waitUntil: 'networkidle2',
-        timeout: 30000
-    });
+        await page.goto(`https://store.steampowered.com/search/?term=${encodeURIComponent(query)}`, {
+            waitUntil: 'networkidle2',
+            timeout: 30000
+        });
     
-    await page.waitForSelector('#search_resultsRows');
-    
-    let results = [];
-    let previousHeight;
-    let attempts = 0;
-    const maxAttempts = 1;
-    
-    while (attempts < maxAttempts && results.length < maxResults) {
+        try {
+            log(chalk.yellow(`[${time()}] Waiting for the selector...`));
 
-        const newResults = await page.evaluate(() => {
-            const items = [];
-            document.querySelectorAll('#search_resultsRows a').forEach(item => {
-                const appId = item.getAttribute('data-ds-appid');
-                const bundleId = item.getAttribute('data-ds-bundleid');
+            await page.waitForSelector('#search_resultsRows');
 
-                const originalImgUrl = appId ? `https://cdn.akamai.steamstatic.com/steam/apps/${appId}/header.jpg` : null;
-                const altImgUrl = item.querySelector('img')?.src.replace(/capsule_sm_120\.jpg/g, 'header.jpg');
-                    
-                const discountText = item.querySelector('.discount_pct')?.innerText.trim();
-                const discountPercent = discountText ? parseInt(discountText.replace(/[%-]/g, ''), 10) : 0;
+        } catch (error) {
+            log(chalk.red(`[${time()}] Nothing is found`));
 
-                const finalPrice = item.querySelector('.discount_final_price')?.innerText.toString().replace('Your Price:\n', '').trim();
-                items.push({
-                    steam_appid: appId,
-                    bundle_id: bundleId,
-                    name: item.querySelector('.title')?.innerText.trim(),
-                    original_price: item.querySelector('.discount_original_price')?.innerText.trim() || finalPrice,
-                    final_price: finalPrice,
-                    discount_percent: discountPercent,
-                    header_image: originalImgUrl || altImgUrl,
-                    url: item.href,
+            myCache.set(cacheKey, results, 86400);
+            return results;
+        }
+        
+        while (attempts < maxAttempts && results.length < maxResults) {
+
+            const newResults = await page.evaluate(() => {
+                const items = [];
+
+                document.querySelectorAll('#search_resultsRows a').forEach(item => {
+                    const appId = item.getAttribute('data-ds-appid');
+                    const bundleId = item.getAttribute('data-ds-bundleid');
+
+                    const originalImgUrl = appId ? `https://cdn.akamai.steamstatic.com/steam/apps/${appId}/header.jpg` : null;
+                    const altImgUrl = item.querySelector('img')?.src.replace(/capsule_sm_120\.jpg/g, 'header.jpg');
+                        
+                    const discountText = item.querySelector('.discount_pct')?.innerText.trim();
+                    const discountPercent = discountText ? parseInt(discountText.replace(/[%-]/g, ''), 10) : 0;
+
+                    const finalPrice = item.querySelector('.discount_final_price')?.innerText.toString().replace('Your Price:\n', '').trim();
+                    items.push({
+                        steam_appid: appId,
+                        bundle_id: bundleId,
+                        name: item.querySelector('.title')?.innerText.trim(),
+                        original_price: item.querySelector('.discount_original_price')?.innerText.trim() || finalPrice,
+                        final_price: finalPrice,
+                        discount_percent: discountPercent,
+                        header_image: originalImgUrl || altImgUrl,
+                        url: item.href,
+                    });
                 });
+                return items;
             });
-            return items;
-        });
+            
+            newResults.forEach(item => {
+                if (!results.some(existing => existing.url === item.url)) {
+                    results.push(item);
+                }
+            });
+            
+            previousHeight = await page.evaluate('document.body.scrollHeight');
+            await page.evaluate('window.scrollTo(0, document.body.scrollHeight)');
+            
+            await page.waitForFunction(`document.body.scrollHeight > ${previousHeight}`, {
+                timeout: 5000
+            }).catch(() => {
+                log(chalk.yellow(`[${time()}] No more results to load`));
+
+                attempts++;
+            });
+            await new Promise(resolve => setTimeout(resolve, 5000));
+
+            await page.waitForNetworkIdle();
+
+            log(chalk.yellow(`[${time()}] Found ${results.length} results`));
+        }
         
-        newResults.forEach(item => {
-            if (!results.some(existing => existing.url === item.url)) {
-                results.push(item);
-            }
-        });
-        
-        previousHeight = await page.evaluate('document.body.scrollHeight');
-        await page.evaluate('window.scrollTo(0, document.body.scrollHeight)');
-        
-        await page.waitForFunction(`document.body.scrollHeight > ${previousHeight}`, {
-            timeout: 5000
-        }).catch(() => {
-            log('No more results loading');
-            attempts++;
-        });
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        log(chalk.green(`[${time()}] Total results for "${query}": ${results.length}`));
+        // log(results)
 
+        myCache.set(cacheKey, results, 86400);
 
-        await page.waitForNetworkIdle();
-
-        log(`Found ${results.length} results`)
-    }
-    
-    log(chalk.yellow(`Total results for "${query}": ${results.length}`));
-    log(results)
-    myCache.set(cacheKey, results, 86400);
-
-    return results;
+        return results;
 
     } catch (error) {
-        log(chalk.red(`Scraping error for "${query}":`, error));
+        log(chalk.red(`[${time()}] Scraping error for "${query}":`, error));
         throw error;
     } finally {
+        log('Browser Close\n')
         await browser.close();
     }
     
@@ -433,19 +465,20 @@ app.get('/search', async (req, res) => {
     if (!query || query.length < 3) {
         return res.render('search', {
             query,
-            results: [],
+            result: [],
             message: 'Please enter at least 3 characters'
         });
     }
 
     try {
-        const steamResults = await scrapeSteamSearch(query, 50);
+        const steamResults = await scrapeSteamSearch(query, 300);
         const totalPages = Math.ceil(steamResults.length / perPage);
         const hasPrevious = page > 1;
         const hasNext = page < totalPages;
 
         return res.render('search', {
             query,
+            totalResults: steamResults,
             results: steamResults.slice(Number((page - 1) * perPage), endIdx),
             message: null,
             currentPage: page,
