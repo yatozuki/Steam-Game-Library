@@ -16,7 +16,12 @@
     "ejs": "^3.1.10",
     "express": "^5.1.0",
     "fuse.js": "^7.1.0",
+    "glob": "^11.0.3",
+    "lru-cache": "^11.1.0",
     "node-cache": "^5.1.2",
-    "puppeteer": "^24.10.1"
+    "puppeteer": "^24.10.1",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2",
+    "rimraf": "^6.0.1"
   }
 }
