@@ -4,7 +4,7 @@
         <a class="web-title" href="/">Steam Game Library</a>
 
         <form action="/search" method="get" class="search_container">
-            <input type="text" name="q" class="search-bar" placeholder="Search for games..." value="<%= query || '' %>">
+            <input type="text" name="q" class="search-bar" placeholder="Search for games..." value="<%= query %>" required minlength="3">
             <button class="btn" type="submit"><i class="fa-solid fa-magnifying-glass"></i></button>
         </form>    
     </div>
