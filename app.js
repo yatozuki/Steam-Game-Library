@@ -18,7 +18,7 @@ const myCache = new NodeCache({
     checkperiod: 2000
 });
 
-const Delay_MS = 200;
+const Delay_MS = 35000;
 const perPage = 20;
 
 
@@ -207,6 +207,10 @@ async function gameFilter(page, perPage) {
 
             } catch (error) {
                 log(`Error processing ${appID}:`, error.message);
+                if (error.response?.status === 429) {
+                    await new Promise(resolve => setTimeout(resolve, Delay_MS));
+                    saveData();
+                }
             }
 
         } else if (startIdx < gameAppId.length) {
@@ -278,6 +282,10 @@ async function gameFilter(page, perPage) {
 
             } catch (error) {
                 log(`Error processing ${appID}:`, error.message);
+                if (error.response?.status === 429) {
+                    await new Promise(resolve => setTimeout(resolve, Delay_MS));
+                    saveData();
+                }
             }
         }
     }
@@ -334,7 +342,7 @@ async function scrapeSteamSearch(query, maxResults = 100) {
                 const discountText = item.querySelector('.discount_pct')?.innerText.trim();
                 const discountPercent = discountText ? parseInt(discountText.replace(/[%-]/g, ''), 10) : 0;
 
-                const finalPrice = item.querySelector('.discount_final_price')?.innerText.trim();
+                const finalPrice = item.querySelector('.discount_final_price')?.innerText.toString().replace('Your Price:\n', '').trim();
                 items.push({
                     steam_appid: appId,
                     bundle_id: bundleId,
@@ -373,7 +381,7 @@ async function scrapeSteamSearch(query, maxResults = 100) {
     }
     
     log(chalk.yellow(`Total results for "${query}": ${results.length}`));
-    // log(results)
+    log(results)
     myCache.set(cacheKey, results, 86400);
 
     return results;
@@ -410,7 +418,7 @@ app.get('/', async (req, res) => {
         log(chalk.bgRed('Page error', error.message));
         res.render('error', {
             query,
-            message: 'Sorry, something went wrong',
+            message: 'Failed to load home page',
             error: error.message
         });
     }
@@ -422,12 +430,11 @@ app.get('/search', async (req, res) => {
     let startIdx = (page - 1) * perPage;
     let endIdx = startIdx + perPage;
 
-    if (!query || query.length < 2) {
+    if (!query || query.length < 3) {
         return res.render('search', {
-            success: true,
             query,
             results: [],
-            message: 'Please enter at least 2 characters'
+            message: 'Please enter at least 3 characters'
         });
     }
 
@@ -438,7 +445,6 @@ app.get('/search', async (req, res) => {
         const hasNext = page < totalPages;
 
         return res.render('search', {
-            success: true,
             query,
             results: steamResults.slice(Number((page - 1) * perPage), endIdx),
             message: null,
@@ -451,9 +457,8 @@ app.get('/search', async (req, res) => {
     } catch (error) {
         log(chalk.red('Search error:', error));
         return res.render('error', {
-            success: false,
             query,
-            message: 'Search failed',
+            message: 'Failed to load search result',
             error: error.message
         });
     }
