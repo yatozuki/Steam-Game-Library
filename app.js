@@ -19,8 +19,10 @@ const myCache = new NodeCache({
     checkperiod: 2000
 });
 
+const Scrape_MS = 5000;
 const Delay_MS = 35000;
 const perPage = 20;
+const scrape = 50;
 
 
 const steam_API = 'https://api.steampowered.com/ISteamApps/GetAppList/v2/';
@@ -404,7 +406,7 @@ async function scrapeSteamSearch(query, maxResults = 100) {
 
                 attempts++;
             });
-            await new Promise(resolve => setTimeout(resolve, 5000));
+            await new Promise(resolve => setTimeout(resolve, Scrape_MS));
 
             await page.waitForNetworkIdle();
 
@@ -472,7 +474,7 @@ app.get('/search', async (req, res) => {
     }
 
     try {
-        const steamResults = await scrapeSteamSearch(query, 50);
+        const steamResults = await scrapeSteamSearch(query, scrape);
         const totalPages = Math.ceil(steamResults.length / perPage);
         const hasPrevious = page > 1;
         const hasNext = page < totalPages;
