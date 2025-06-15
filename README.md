@@ -144,5 +144,3 @@ To keep browsing smooth and fast, always stop the server cleanly with `Ctrl+C` a
 ## 🤝 Contributing
 
 I welcome contributions from everyone. If you have ideas for improvements, new features, or spot any issues, feel free to open a pull request or raise an issue. Your suggestions and efforts to enhance the project are greatly appreciated.
-
->>>>>>> clean-version
