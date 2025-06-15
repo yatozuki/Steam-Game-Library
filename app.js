@@ -382,6 +382,7 @@ async function scrapeSteamSearch(query, maxResults = 100) {
                         discount_percent: discountPercent,
                         header_image: originalImgUrl || altImgUrl,
                         url: item.href,
+                        coming_soon: item.querySelector('.search_released')?.innerText.trim()
                     });
                 });
                 return items;
@@ -471,7 +472,7 @@ app.get('/search', async (req, res) => {
     }
 
     try {
-        const steamResults = await scrapeSteamSearch(query, 300);
+        const steamResults = await scrapeSteamSearch(query, 50);
         const totalPages = Math.ceil(steamResults.length / perPage);
         const hasPrevious = page > 1;
         const hasNext = page < totalPages;
@@ -498,7 +499,10 @@ app.get('/search', async (req, res) => {
 });
 
 app.get('/game/:id', async (req, res) => {
-    res.render('detail')
+    const query = req.query.q?.trim().toLowerCase() || '';
+    res.render('detail', {
+        query
+    })
 });
 
 app.get('/dev-tool', (req, res) => {
@@ -532,7 +536,7 @@ async function serverStartup() {
 
         await initialize();
 
-        app.listen(port, () => {
+        app.listen(port, '0.0.0.0', () => {
             log(chalk.green.bold("\n==============================="));
 
             log(chalk.green('Server is running on PORT:'), port);
