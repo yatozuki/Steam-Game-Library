@@ -1,6 +1,7 @@
 import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import { myCache } from '../config/cache.js';
+import {Scrape_MS } from '../config/constants.js';
 import { time, log } from '../utils/helpers.js';
 import chalk from 'chalk';
 
@@ -95,7 +96,7 @@ export async function scrapeSteamSearch(query, maxResults = 100) {
                 log(chalk.yellow(`[${time()}] No more results to load`));
                 attempts++;
             });
-            await new Promise(resolve => setTimeout(resolve, 5000));
+            await new Promise(resolve => setTimeout(resolve, Scrape_MS));
             await page.waitForNetworkIdle();
             log(chalk.yellow(`[${time()}] Found ${results.length} results`));
         }

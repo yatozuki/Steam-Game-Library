@@ -1,5 +1,5 @@
 import { scrapeSteamSearch } from '../services/scrapeService.js';
-import { perPage } from '../config/constants.js';
+import { perPage, scrape } from '../config/constants.js';
 import { log } from '../utils/helpers.js';
 import chalk from 'chalk';
 
@@ -18,7 +18,7 @@ export async function searchGames(req, res) {
     // }
 
     try {
-        const steamResults = await scrapeSteamSearch(query, 50);
+        const steamResults = await scrapeSteamSearch(query, scrape);
         const totalPages = Math.ceil(steamResults.length / perPage);
         const hasPrevious = page > 1;
         const hasNext = page < totalPages;
