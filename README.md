@@ -32,7 +32,6 @@
 - [📷 Screenshots](#-screenshots)
 - [🐞 Known Bugs](#-known-bugs)
 - [📂 Note](#-note)
-- [🔀 Branch](#-branch)
 - [🤝 Contributing](#-contributing)
 
 ---
@@ -74,15 +73,11 @@ git clone https://github.com/yatozuki/Steam-Game-Library.git
 ```
 cd Steam-Game-Library
 ```
-3. ***(Optional)* Checkout a branch:** If you want the modular code version, you can switch to the ``clean-version`` branch:
-```
-git checkout clean-version
-```
-4. **Install dependencies**  
+3. **Install dependencies**  
 ```
 npm i
 ```
-5. **Start the server**  
+4. **Start the server**  
 ```
 node app.js
 ```
@@ -90,11 +85,11 @@ or
 ```
 nodemon app.js
 ```
-6. **Open browser**  
+5. **Open browser**  
 ```
 localhost:3000
 ```
-7. **Access on mobile (same Wi-Fi)**  
+6. **Access on other devices (same Wi-Fi)**  
 ```
 192.x.x.x:3000
 ```
@@ -107,7 +102,7 @@ Once the server is running, you can browse Steam games using a clean, paginated 
 
 ### 🔍 Searching for Games:
 
-The search feature leverages **Puppeteer** to perform real-time searches directly from Steam’s website. Unlike the official Steam API which lacks a proper text-based search endpoint. This approach uses a headless Chrome instance to scrape actual search results. This means the search can handle **partial names**, **typos**, and **fuzzy matches** with high accuracy. The only downside is it’s a bit slower like ~20 sec for 50 games, since Puppeteer needs to launch a browser and load content. But the trade-off is worth it: more reliable results, better matching, and no API limitations getting in your way.
+The search feature leverages **Puppeteer** to perform real-time searches directly from Steam’s website. Unlike the official Steam API which lacks a proper text-based search endpoint. This approach uses a headless Chrome instance to scrape actual search results. This means the search can handle **partial names**, **typos**, and **fuzzy matches** with high accuracy. The only downside is it’s a bit slower like ~20 sec for 50 games, since Puppeteer needs to launch a browser and load content. But the trade-off is worth it. More reliable results, better matching, and no API limitations getting in your way.
 >**Do not exceed 1000 Scrape Results** unless you’re okay with risking an IP block. Steam doesn’t like aggressive scraping. If you _really_ need to go beyond that, use a **reliable VPN** and rotate IPs carefully. But be warned,  **you do so at your own risk**. I take no responsibility for any blocks, bans, or downtime caused by misuse. Browse smart. It's recommended to keep it under 500.
 
 
@@ -143,14 +138,6 @@ To keep browsing smooth and fast, always stop the server cleanly with `Ctrl+C` a
 -   Deleting the `cached.json` files forces the app to re-fetch all data from Steam on the next run. This is handy for refreshing data but will slow startup and increase API usage.
     
 -   To reset the cache, simply delete the `.json` files in the `/data/` folder. They’ll be automatically regenerated when you reload the app.
-
-## 🔀 Branch
-
->-   `master`: All logic is bundled into a single file (`app.js`). Quick and simple, but not ideal for scaling or maintenance.
->   
->-   `clean-version`: Codebase is modular and organized. Logic is split into controllers, services, utils and config for better readability, structure, and long-term maintainability.
-
-Same functionality, just code structure difference.
 
 ---
 
