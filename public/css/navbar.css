@@ -11,10 +11,12 @@
 .web-title {
     color: #dbcfd3;
     transition: color 0.3s ease;
+    margin-left: 30px;
     padding: 15px 16px;
     text-decoration: none;
     font-size: 1.5rem;
     font-weight: bold;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .web-title:hover {
@@ -38,12 +40,13 @@
     border: 0;
     outline: 0;
     border-radius: 8px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 /* Search Button */
 .btn {
     /* background: linear-gradient(150deg,#be326d 5%, #3b0659 50%, #330c5f 100% ); */
-    background: #1b2838;
+    background: #2a394a;
     color: #fff;
     width: 43px;
     height: 43px;
