@@ -29,10 +29,17 @@
                                 <% if (game.final_price == 'Free') { %>
                                 <p class="game-price">
                                     <span class="game-price__price">
-                                        Free
+                                        <strong>Free</strong>
                                     </span>
                                 </p>
-
+                                <% } else if (game.coming_soon == 'To be announced' || game.coming_soon == 'Coming soon') { %>
+                                    <p class="game-price">
+                                    <span class="game-price__price">
+                                        <strong>
+                                            <%= game.coming_soon %>
+                                        </strong>
+                                    </span>
+                                </p>
                                 <% } else if (game.original_price) { %>
                                     <% if (game.discount_percent > 0) { %>
                                     <% let colorClass = game.discount_percent <= 40 ? 'game-price__discount-red': 
@@ -57,7 +64,7 @@
                                 <% } else { %>
                                 <p class="game-price">
                                     <span class="game-price__price">
-                                        N/A
+                                        <em> N/A </em>
                                     </span>
                                 </p>
                                 <% } %>
