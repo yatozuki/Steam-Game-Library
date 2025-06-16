@@ -93,6 +93,10 @@
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
+.active-page {
+    background: linear-gradient(150deg, #be326d 5%, #4d0874 50%, #31095f 100%);
+}
+
 .dot {
     font-size: 1.5rem;
     font-weight: bold;
