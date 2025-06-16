@@ -11,30 +11,34 @@ export async function getHomePage(req, res) {
         const totalPages = getTotalPages();
         const games = await gameFilter(page, perPage);
 
-        res.render('home', {
-            query,
-            games: games,
-            currentPage: page,
-            totalPages,
-            hasPrevious: page > 1,
-            hasNext: page < totalPages
-        });
+        if (games === 429) {
+            res.render('error', {
+                query,
+                caption: "Reached Steam API Limit!",
+                message: "Unfortunately, you’ve hit the Steam API limit. Please wait a few minutes before trying again.",
+                error: "Request failed with status code 429"
+            });
+        } else {
+            res.render('home', {
+                query,
+                games: games,
+                currentPage: page,
+                totalPages,
+                hasPrevious: page > 1,
+                hasNext: page < totalPages
+            });
+        }
+
         
     } catch (error) {
         log(chalk.bgRed('Page error', error.message));
         res.render('error', {
             query,
+            caption: "Something is wrong!",
             message: 'Failed to load home page',
             error: error.message
         });
     }
-}
-
-export async function getGameDetail(req, res) {
-    const query = req.query.q?.trim().toLowerCase() || '';
-    res.render('detail', {
-        query
-    });
 }
 
 export function getDevTool(req, res) {
