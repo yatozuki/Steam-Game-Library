@@ -11,8 +11,8 @@ export async function detailData(appid) {
     try {
         const response = await axios.get(steam_API_details + appid);
         const result = response.data[appid];
-
-    } catch (error) {
         
+    } catch (error) {
+        log(`Error processing ${appid}:`, error.message)
     }
 }

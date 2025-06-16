@@ -7,8 +7,8 @@ export async function getGameDetail(req, res) {
     const appid = parseInt(req.params.id);
     log(appid);
 
-    const game = await detailData(appid);
-    log(game);
+    // const game = await detailData(appid);
+    // log(game);
 
 
     res.render('detail', {
