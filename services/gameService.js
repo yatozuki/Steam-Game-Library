@@ -36,6 +36,7 @@ export async function gameFilter(page, perPage) {
     log(startIdx);
     let endIdx = startIdx + perPage;
     let validIDs = [];
+    let validCollection = 0;
 
     function isDuplicateGame(gameData) {
         const normalizedNewName = gameData.name.toLowerCase().trim();
@@ -58,7 +59,9 @@ export async function gameFilter(page, perPage) {
                 if (!isDuplicateGame(existingDetail)) {
                     validIDs.push(existingDetail);
                     myCache.set(`game_${appID}`, { data: existingDetail }, 86400);
-                    log(chalk.green(`[STORAGE] Loaded existing game: ${appID}`));
+                    validCollection++;
+                    log(chalk.green(`[GAME ${validCollection}/${perPage}] Loaded `)+ chalk.yellow(`[STORAGE]`) + chalk.green(`: ${appID}`));
+
                 }
                 continue;
             }
@@ -85,14 +88,17 @@ export async function gameFilter(page, perPage) {
                     }
 
                     validIDs.push(gameData);
-                    log(chalk.green(`Game: ${appID}`));
+                    validCollection++;
+                    log(chalk.green(`[GAME ${validCollection}/${perPage}] Loaded: ${appID}`));
+
                 }
 
             } catch (error) {
                 log(`Error processing ${appID}:`, error.message);
                 if (error.response?.status === 429) {
-                    await new Promise(resolve => setTimeout(resolve, Delay_MS));
+                    // await new Promise(resolve => setTimeout(resolve, Delay_MS));
                     saveData();
+                    return error.response.status;
                 }
             }
 
@@ -108,7 +114,8 @@ export async function gameFilter(page, perPage) {
                 if (!isDuplicateGame(existingDetail)) {
                     validIDs.push(existingDetail);
                     myCache.set(`game_${appID}`, { data: existingDetail }, 86400);
-                    log(chalk.green(`[STORAGE] Loaded New game: ${appID}`));
+                    validCollection++;
+                    log(chalk.green(`[GAME ${validCollection}/${perPage}] Loaded `)+ chalk.yellow(`[STORAGE]`) + chalk.green(`: ${appID}`));
                 }
                 continue;
             }
@@ -122,7 +129,7 @@ export async function gameFilter(page, perPage) {
                     ignoreID.push(appID);
                     ignoreSet.add(appID);
                     log(chalk.bgRed(`Ignore ID: ${appID}`));
-                    continue;
+
                 }
 
                 if (gameData.type === 'dlc') {
@@ -147,15 +154,16 @@ export async function gameFilter(page, perPage) {
                     actualGames.push(appID);
                     actualSet.add(appID);
                     validIDs.push(gameData);
-
-                    log(chalk.bgGreen(`New Game Added: ${appID}`));
+                    validCollection++;
+                    log(chalk.bgGreen(`[GAME ${validCollection}/${perPage}] Added: ${appID}`));
                 }
 
             } catch (error) {
                 log(`Error processing ${appID}:`, error.message);
                 if (error.response?.status === 429) {
-                    await new Promise(resolve => setTimeout(resolve, Delay_MS));
+                    // await new Promise(resolve => setTimeout(resolve, Delay_MS));
                     saveData();
+                    return error.response.status;
                 }
             }
         }
@@ -163,7 +171,8 @@ export async function gameFilter(page, perPage) {
 
     updateGameData({ actualGames, dlcGames, ignoreID, detailInfo, skipID, 
                     actualSet, dlcSet, ignoreSet, detailSet, skipSet });
-
+    
+    saveData();
     log(`Total game: ${detailInfo.length}`);
     if (detailInfo.length >= endIdx) {
         return detailInfo.slice(Number((page - 1) * perPage), endIdx);
@@ -177,5 +186,5 @@ export function getGameAppId() {
 }
 
 export function getTotalPages() {
-    return Math.ceil(gameAppId.length / perPage);
+    return Math.ceil((gameAppId.length / perPage)-2);
 }
