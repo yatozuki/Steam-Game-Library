@@ -7,8 +7,9 @@ import chalk from 'chalk';
 import { port } from './config/constants.js'
 import { initialize, getGameAppId } from './services/gameService.js';
 import { getGameData } from './services/dataService.js';
-import { getHomePage, getGameDetail, getDevTool } from './controllers/gameController.js';
+import { getHomePage, getDevTool } from './controllers/gameController.js';
 import { searchGames } from './controllers/searchController.js';
+import { getGameDetail } from './controllers/detailController.js';
 import { cleanExit, log } from './utils/helpers.js';
 import { saveData } from './services/dataService.js';
 
