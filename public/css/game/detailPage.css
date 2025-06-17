@@ -3,17 +3,22 @@
 }
 
 body {
-    color: c5c5c5;
+    color: #c5c5c5;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 hr {
-    border: 2px solid #dddddd;
+    border: 2px solid #c5c5c5;
 }
 
 h1 {
     text-align: center;
     margin: 40px 0;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
 }
 
 .container {
@@ -40,5 +45,238 @@ h1 {
     background: #383838;
     margin-bottom: 15px;
     border-radius: 8px;
-    padding: 20px 20px;
+}
+
+.rating-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    column-gap: 1rem;
+}
+
+.box-rating {
+    padding: 20px 0;
+}
+
+.rating-img {
+    font-size: 2.8rem;
+}
+
+.rating-text__item {
+    display: flex;
+    font-size: 0.9rem;
+    line-height:18px;
+}
+
+.rating-text__item strong {
+    flex-shrink: 0;
+    text-align: left;
+    width: 120px;
+    color: #CCCCCC;
+}
+
+.rating-color {
+    color: #A4D007;
+}
+
+.rating-count {
+    color: #dddddd;
+}
+
+.header-img {
+    display: block;
+    width: 23rem;
+    border-radius: 8px 8px 0 0;
+
+}
+
+.info-container {
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+}
+
+.info-short-description {
+    font-size: 15px;
+    line-height: 1.4;
+    color: #acb2b8;
+}
+ 
+.info__item {
+    display: flex;
+    line-height: 1.4;
+}
+
+.info__item strong {
+    color: #CCCCCC;
+    width: 110px;
+    flex-shrink: 0;
+    text-align: left;
+    font-weight: normal;
+    font-size: 13px;
+}
+
+.info__item span:not(.genre-tag, .platform) {
+    color: #FFFFFF;
+    font-size: 13px;
+}
+
+.genre-tags, .platforms {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.genre-tag, .platform {
+    padding: 2px 6px;
+    border-radius: 2px;
+    font-size: 12px;
+}
+
+.platform.w{
+    color: #ffffff;
+    background: rgba(38, 118, 164, 0.68);
+
+}
+
+.platform.m {
+    color: #ffffff;
+    background: linear-gradient(to bottom, #282828 0%, #494949 50%, #282828 100%);
+}
+
+.platform.l {
+    color: #ffffff;
+    background: rgba(255, 125, 0, 0.68);
+}
+
+.genre-tag {
+    color: #66C0F4;
+    background: rgba(103, 192, 244, 0.2);
+}
+
+.price-container {
+    display: flex;
+    justify-content: center;
+}
+
+.price-items {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 6px;
+    column-gap: 1rem;
+    padding: 10px 20px;
+    background: #3a4259;
+}
+
+.price-info {
+    display: flex;
+}
+
+.price-info span:not(.discount) {
+    display: flex;
+    flex-direction: column;
+    align-items: end;
+    padding: 4px 6px 6px 6px;
+    background: #414141;
+    line-height: 0.8;
+    border-radius: 0 6px 6px 0;
+}
+
+.discount {
+    align-self: center;
+    color: #2dff34;
+    background: #0a6200;
+    padding: 13px 8px;
+    border-radius: 6px 0 0 6px;
+    font-weight: bold;
+    font-size: 20px;
+}
+
+.original-price {
+    color: #738895;
+    font-size: 13px;
+    position: relative;
+}
+
+.original-price::before {
+  content: "";
+  position: absolute;
+  top: 13px;
+  left: 5px;
+  width: 45px;
+  height: 1px;
+  background: #738895;
+  transform: rotate(-10deg); /* Diagonal angle */
+  transform-origin: 0 0;
+}
+
+.current-price {
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.box-requirement {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.platform-icons-container div{
+    display: flex;
+    justify-content: center;
+    column-gap: 3rem;
+}
+
+.platform-icon {
+    width: 40px;
+    height: 40px;
+}
+
+.system-requirements {
+    display: flex;
+    flex-direction: column;
+}
+
+.min-requirement, .max-requirement {
+    display: flex;
+    flex-direction: column;
+}
+
+.minimum {
+    align-self: center;
+    color: #a69504;
+    margin: 5px 0;
+}
+
+.maximum {
+    align-self: center;
+    color: #0fb826;
+    margin: 5px;
+}
+
+.req-ul {
+    display: flex;
+    flex-direction: column;
+    padding: 3px 12px;
+    margin: 0;
+}
+
+.req-ul li {
+    display: flex;
+    list-style-type: none;
+    margin-bottom: 16px;
+}
+
+.req-ul strong {
+    text-align: left;
+    flex-shrink: 0;
+    width: 100px;
+}
+
+.req-line {
+    border: 0;
+    border-top: 7px dotted #c5c5c5;
+    width: 15rem;
 }
