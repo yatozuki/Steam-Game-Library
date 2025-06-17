@@ -79,11 +79,11 @@ npm i
 ```
 4. **Start the server**  
 ```
-node app.js
+npm start
 ```
-or  
+**For development**  
 ```
-nodemon app.js
+npm run dev
 ```
 5. **Open browser**  
 ```
