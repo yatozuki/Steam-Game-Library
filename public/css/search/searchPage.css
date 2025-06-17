@@ -48,18 +48,18 @@
 }
 
 .game-price__discount-red {
-    color: #ff0000;
-    background-color: #2c0000;
+    color: #FF4500;  
+    background-color:rgba(255, 0, 0, 0.2);
 }
 
 .game-price__discount-yellow {
-    color: #ffe175;
-    background-color: #926a41;
+    color: #FFD700;
+    background-color: rgba(255, 215, 0, 0.2);
 }
 
 .game-price__discount-green {
-    color: #2af230;
-    background-color: #10a600;
+    color: #A4D007;
+    background-color: rgba(164, 208, 7, 0.1);
 }
 
 .game-price__discount-green, .game-price__discount-yellow, .game-price__discount-red {
@@ -67,6 +67,10 @@
     border-top-left-radius: 4px;
     border-bottom-left-radius: 4px;
     font-weight: bold;
+}
+
+.free {
+    color: #2cda00;
 }
 
 .game-price__price {
