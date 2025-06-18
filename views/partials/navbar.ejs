@@ -1,10 +1,13 @@
 <header>
 
     <div class="nav-bar">
+        <!-- Website title link to homepage -->
         <a class="web-title" href="/">Steam Game Library</a>
-
+        <!-- Search form with GET method -->
         <form action="/search" method="get" class="search_container">
+            <!-- Input field with value binding and minimum 3 characters -->
             <input type="text" name="q" class="search-bar" placeholder="Search for games..." value="<%= query %>" required minlength="3">
+            <!-- Submit button with search icon -->
             <button class="btn" type="submit"><i class="fa-solid fa-magnifying-glass"></i></button>
         </form>    
     </div>

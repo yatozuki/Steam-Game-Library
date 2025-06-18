@@ -1,114 +1,157 @@
+<!-- If totalResults is 1 or greater then 1 -->
 <% if (totalResults.length >= 1) { %>
+    <!-- If totalResult is equal to 1 -->
     <% if (totalResults.length === 1) { %>
+        <!-- Show "Total 1 result found for {search query} -->
         <h3 class="result-text" style="text-align: center;">Total <%= totalResults.length %> result found for <em>"<%= query %>"</em></h3>
     <% } else { %>
+        <!-- Show "Total {amount} results found for {search query} -->
         <h3 class="result-text" style="text-align: center;">Total <%= totalResults.length %> results found for <em>"<%= query %>"</em></h3>
     <% } %>
-
-    <div class="container">
+    
+    <ul class="container">
+        <!-- Pass through result one by one -->
         <% results.forEach(game => { %>
             <% if (game) { %>
+                <!-- Whole game item including: Header image, Title, Price, Link to detail page -->
                 <li class="item">
-                    <% if (game.steam_appid && !game.steam_appid.includes(',')) {%>
-                        <a href="/game/<%= game.steam_appid %>">
-                    <% } else if (game.bundle_id && !game.bundle_id.includes(',')) { %>
-                        <a href="/game/<%= game.bundle_id %>">
-                    <% } else { %>
-                        <a href="<%= game.url %>" target="_blank" rel="noopener">
-                    <% } %>
+                <!-- If {appid} and no "," {001, 002, 003} -->
+                <% if (game.steam_appid && !game.steam_appid.includes(',')) {%>
+                    <!-- go to /game/{appid} -->
+                    <a href="/game/<%= game.steam_appid %>">
+
+                <!-- If appid is not available: check {bundle ID} && no "," {001, 002, 003} -->
+                <% } else if (game.bundle_id && !game.bundle_id.includes(',')) { %>
+                    <!-- go to /game/{bundle ID} -->
+                    <a href="/game/<%= game.bundle_id %>">
+                
+                <!-- Otherwise (Not available any IDs), go to steam official page directly -->
+                <% } else { %>
+                    <!-- Steam official page link open on new browser tab -->
+                    <a href="<%= game.url %>" target="_blank" rel="noopener">
+                <% } %>
                         <div class="container-item">
+                            <!-- Header Image -->
                             <div class="content">
                                 <img class="game-image" src="<%= game.header_image %>"
                                     onerror="this.src='https://placehold.jp/c0bfbc/ffffff/300x180.png?text=image';">
                             </div>
+
+                            <!-- Game Title -->
                             <div class="content">
+                                <!-- If game title longer then 47 characters, replace the remaining with "..." -->
                                 <h2 class="game-title">
                                     <%= game.name.length > 47 ? game.name.substring(0, 47) + '...' : game.name %></h2>
                             </div>
+
+                            <!-- Price -->
                             <div class="content">
+                                <!-- Free -->
                                 <% if (game.final_price == 'Free') { %>
-                                <p class="game-price">
-                                    <span class="game-price__price free">
-                                        <strong>Free</strong>
-                                    </span>
-                                </p>
+                                    <p class="game-price">
+                                        <span class="game-price__price free">
+                                            <strong>Free</strong>
+                                        </span>
+                                    </p>
+
+                                <!-- "Coming soon" OR "To be announced" game -->
                                 <% } else if (game.coming_soon == 'To be announced' || game.coming_soon == 'Coming soon') { %>
                                     <p class="game-price">
-                                    <span class="game-price__price">
-                                        <strong>
-                                            <%= game.coming_soon %>
-                                        </strong>
-                                    </span>
-                                </p>
-                                <% } else if (game.original_price) { %>
-                                    <% if (game.discount_percent > 0) { %>
-                                    <% let colorClass = game.discount_percent <= 40 ? 'game-price__discount-red': 
-                                                    game.discount_percent <= 65 ? 'game-price__discount-yellow':
-                                                    game.discount_percent <= 100 ? 'game-price__discount-green': '';
-                                            %>
-                                    <p class="game-price">
-                                        <span class="<%= colorClass %>">
-                                            -<%= game.discount_percent %>%
-                                        </span>
                                         <span class="game-price__price">
-                                            <%= game.final_price %>
+                                            <strong>
+                                                <%= game.coming_soon %>
+                                            </strong>
                                         </span>
                                     </p>
-                                    <% } else { %>
-                                    <p class="game-price">
-                                        <span class="game-price__price">
-                                            <%= game.final_price %>
-                                        </span>
-                                    </p>
-                                    <% } %>
-                                <% } else { %>
-                                <p class="game-price">
-                                    <span class="game-price__price">
-                                        <em> N/A </em>
-                                    </span>
-                                </p>
-                                <% } %>
 
+                                <!-- Original Price -->
+                                <% } else if (game.original_price) { %>
+                                        <!-- If there is discount -->
+                                        <% if (game.discount_percent > 0) { %>
+
+                                            <!-- Only choose 1 class depending on result data. Red (0 - 40), Yellow (41 - 65), Green (66 - 100). If there is no data, then leave the class empty '' -->
+                                            <% let colorClass = game.discount_percent <= 40 ? 'game-price__discount-red': 
+                                                                game.discount_percent <= 65 ? 'game-price__discount-yellow':
+                                                                game.discount_percent <= 100 ? 'game-price__discount-green': '';
+                                            %>
+
+
+                                            <p class="game-price">
+                                                <!-- Discount Percentage -->
+                                                <span class="<%= colorClass %>">
+                                                    -<%= game.discount_percent %>%
+                                                </span>
+                                                <!-- Final Discount Price -->
+                                                <span class="game-price__price">
+                                                    <%= game.final_price %>
+                                                </span>
+                                            </p>
+
+                                    <!-- Otherwise, just show original price (A.k.a. Final price) -->
+                                    <% } else { %>
+                                        <p class="game-price">
+                                            <span class="game-price__price">
+                                                <%= game.final_price %>
+                                            </span>
+                                        </p>
+                                    <% } %>
+
+                                <!-- If none of those price data exist, then show 'N/A' -->
+                                <% } else { %>
+                                    <p class="game-price">
+                                        <span class="game-price__price">
+                                            <em> N/A </em>
+                                        </span>
+                                    </p>
+                                <% } %>
                             </div>
                         </div>
-                        </a>
+                    </a>
                 </li>
+
+            <!-- If only appid is available and data are missing -->
             <% } else { %>
                 <li class="item">
                     <div class="container-item">
+                        <!-- Image Placeholder -->
                         <div class="content">
                             <img class="game-image" src="https://placehold.jp/c0bfbc/ffffff/300x180.png?text=image">
                         </div>
+                        <!-- Game Title -->
                         <div class="content">
                             <h2 class="game-title">Not available</h2>
                         </div>
+                        <!-- Price -->
                         <div class="content">
                             <p class="game-price">
                                 <span class="game-price__price">
                                     N/A
                                 </span>
                             </p>
-
                         </div>
                     </div>
-
                 </li>
             <% } %>
         <% }) %>
-    </div>
+    </ul>
+
+<!-- If totalResult is 0 -->
 <% } else { %>
     <div class="search-container">
+        <!-- 0 result found for {Search query} -->
         <div>
             <h3 class="result-text" style="text-align: center;"><%= totalResults.length %> result found for <em>"<%= query %>"</em></h3>
         </div>
-
+        <!-- No games found matching "{Search query}" -->
         <div>
             <h2 class="message">No games found matching <em>"<%= query %>"</em></h2>
         </div>
-
+        <!-- Search Form -->
         <div>
             <form action="/search" method="get" class="search-form">
+                <!-- Search bar input -->
                 <input class="pg-search-bar" type="text" name="q" placeholder="Search games..." value="<%= query %>" required minlength="3">
+                <!-- Search button -->
                 <button class="pg-btn" type="submit">Search</button>
             </form>
         </div>

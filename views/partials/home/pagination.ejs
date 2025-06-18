@@ -1,22 +1,31 @@
+<!-- Note that home page pagination and search page pagination is different on href -->
+
 <div class="pagination">
+    <!-- Previous page button -->
     <% if (hasPrevious) { %>
     <a class="btn" href="/?page=<%= currentPage - 1 %>">&lt;</a>
     <% } %>
 
+    <!-- First page and leading dots -->
     <% if (currentPage > 3) { %>
     <a class="btn" href="/?page=1">1</a>
     <span class="dot">...</span>
     <% } %>
 
+    <!-- Page number buttons around current page. 
+     e.g < 1,2,3...4,5,current page,6,7...,total(last) page >
+    -->
     <% for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) { %>
     <a class="btn <%= currentPage === i ? 'active-page' : '' %>" href="/?page=<%= i %>"><%= i %></a>
     <% } %>
 
+    <!-- Trailing dots and total(last) page -->
     <% if (currentPage < totalPages - 2) { %>
     <span class="dot">...</span>
     <a class="btn" href="/?page=<%= totalPages %>"><%= totalPages %></a>
     <% } %>
 
+    <!-- Next page button -->
     <% if (hasNext) { %>
     <a class="btn" href="/?page=<%= currentPage + 1 %>">&gt;</a>
     <% } %>
