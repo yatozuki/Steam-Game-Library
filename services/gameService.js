@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { steam_API, steam_API_details, Delay_MS, perPage } from '../config/constants.js';
-import { myCache } from '../config/cache.js';
+import { myCache, cacheTime } from '../config/cache.js';
 import { loadData, saveData, getGameData, updateGameData } from './dataService.js';
 import { log } from '../utils/helpers.js';
 import chalk from 'chalk';
@@ -53,12 +53,20 @@ export async function gameFilter(page, perPage) {
 
             if (ignoreSet.has(appID) || dlcSet.has(appID) || skipSet.has(appID)) continue; 
 
+            const cacheGame = myCache.get(`game_${appID}`);
+            if (cacheGame) {
+                validIDs.push(cacheGame.data);
+                validCollection++;
+                log(chalk.green(`[Game ${validCollection}/${perPage}] Loaded `)+ chalk.yellow(`[CACHED]`) + chalk.green(`: ${appID}`));
+            }
+
+
             const existingDetail = detailInfo.find(game => game.steam_appid === appID);
 
             if (existingDetail) {             
                 if (!isDuplicateGame(existingDetail)) {
                     validIDs.push(existingDetail);
-                    myCache.set(`game_${appID}`, { data: existingDetail }, 86400);
+                    myCache.set(`game_${appID}`, { data: existingDetail }, cacheTime);
                     validCollection++;
                     log(chalk.green(`[GAME ${validCollection}/${perPage}] Loaded `)+ chalk.yellow(`[STORAGE]`) + chalk.green(`: ${appID}`));
 
@@ -81,7 +89,7 @@ export async function gameFilter(page, perPage) {
                 }
 
                 if (actualSet.has(appID)) {
-                    myCache.set(`game_${appID}`, { data: gameData }, 86400);
+                    myCache.set(`game_${appID}`, { data: gameData }, cacheTime);
 
                     if (!detailInfo.some(game => game.steam_appid === appID)) {
                         detailInfo.push(gameData);
@@ -97,7 +105,7 @@ export async function gameFilter(page, perPage) {
                 log(`Error processing ${appID}:`, error.message);
                 if (error.response?.status === 429) {
                     // await new Promise(resolve => setTimeout(resolve, Delay_MS));
-                    saveData();
+                    // saveData();
                     return error.response.status;
                 }
             }
@@ -108,12 +116,19 @@ export async function gameFilter(page, perPage) {
 
             if (ignoreSet.has(appID) || dlcSet.has(appID) || skipSet.has(appID)) continue; 
 
+            const cacheGame = myCache.get(`game_${appID}`);
+            if (cacheGame) {
+                validIDs.push(cacheGame.data);
+                validCollection++;
+                log(chalk.green(`[Game ${validCollection}/${perPage}] Loaded `)+ chalk.yellow(`[CACHED]`) + chalk.green(`: ${appID}`));
+            }
+            
             const existingDetail = detailInfo.find(game => game.steam_appid === appID);
 
             if (existingDetail) {
                 if (!isDuplicateGame(existingDetail)) {
                     validIDs.push(existingDetail);
-                    myCache.set(`game_${appID}`, { data: existingDetail }, 86400);
+                    myCache.set(`game_${appID}`, { data: existingDetail }, cacheTime);
                     validCollection++;
                     log(chalk.green(`[GAME ${validCollection}/${perPage}] Loaded `)+ chalk.yellow(`[STORAGE]`) + chalk.green(`: ${appID}`));
                 }
@@ -147,7 +162,7 @@ export async function gameFilter(page, perPage) {
                         continue;
                     }
 
-                    myCache.set(`game_${appID}`, { data: gameData }, 86400);
+                    myCache.set(`game_${appID}`, { data: gameData }, cacheTime);
                     if (!detailInfo.some(game => game.steam_appid === appID)) {
                         detailInfo.push(gameData);
                     }
@@ -162,7 +177,7 @@ export async function gameFilter(page, perPage) {
                 log(`Error processing ${appID}:`, error.message);
                 if (error.response?.status === 429) {
                     // await new Promise(resolve => setTimeout(resolve, Delay_MS));
-                    saveData();
+                    // saveData();
                     return error.response.status;
                 }
             }
@@ -172,7 +187,7 @@ export async function gameFilter(page, perPage) {
     updateGameData({ actualGames, dlcGames, ignoreID, detailInfo, skipID, 
                     actualSet, dlcSet, ignoreSet, detailSet, skipSet });
     
-    saveData();
+    // saveData();
     log(`Total game: ${detailInfo.length}`);
     if (detailInfo.length >= endIdx) {
         return detailInfo.slice(Number((page - 1) * perPage), endIdx);
