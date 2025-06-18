@@ -1,4 +1,6 @@
 import { gameFilter, getTotalPages } from '../services/gameService.js';
+import { getGameData } from '../services/dataService.js'
+import { gameDetail_dev } from './detailController.js';
 import { perPage } from '../config/constants.js';
 import { log } from '../utils/helpers.js';
 import chalk from 'chalk';
@@ -42,13 +44,12 @@ export async function getHomePage(req, res) {
 }
 
 export function getDevTool(req, res) {
-    const stats = myCache.getStats();
     const { ignoreID, dlcGames, actualGames } = getGameData();
     
     res.json({
-        keys: myCache.keys(),
         noInfo: ignoreID,
         DLC: dlcGames,
         Games: actualGames,
+        Detail: gameDetail_dev
     });
 }
