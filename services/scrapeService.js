@@ -1,6 +1,6 @@
 import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
-import { myCache } from '../config/cache.js';
+import { myCache, cacheTime } from '../config/cache.js';
 import {Scrape_MS } from '../config/constants.js';
 import { time, log } from '../utils/helpers.js';
 import chalk from 'chalk';
@@ -49,7 +49,7 @@ export async function scrapeSteamSearch(query, maxResults = 100) {
         } catch (error) {
             log(chalk.red(`[${time()}] Nothing is found`));
 
-            myCache.set(cacheKey, results, 86400);
+            myCache.set(cacheKey, results, cacheTime);
             return results;
         }
         
@@ -102,7 +102,7 @@ export async function scrapeSteamSearch(query, maxResults = 100) {
         }
         
         log(chalk.green(`[${time()}] Total results for "${query}": ${results.length}`));
-        myCache.set(cacheKey, results, 86400);
+        myCache.set(cacheKey, results, cacheTime);
         return results;
 
     } catch (error) {
