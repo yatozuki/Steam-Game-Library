@@ -4,4 +4,4 @@ export const steam_API_details = 'https://store.steampowered.com/api/appdetails?
 export const Delay_MS = 35000;
 export const Scrape_MS = 5000;
 export const perPage = 20;
-export const scrape = 50;
+export const scrape = 200;
