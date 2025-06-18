@@ -1,62 +1,39 @@
 <%- include('partials/game/detailHeader.ejs') %>
 <%- include('partials/navbar.ejs') %>
 
-<h1>Elden Ring</h1>
+<!-- Game Title -->
+<h1><%= game.name %></h1>
 
 <div class="container">
+    <!-- Left Side: Image, Video, Description -->
     <div class="left-container">
-
+        <!-- Game Carousel Images -->
         <div class="content-container visual">
             <img width="800"
                 src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2622380/ss_edfd360b92d6f9b983b759fd837e664b86cd9563.600x338.jpg?t=1749150157"
                 alt="">
         </div>
 
+        <!-- Game Description -->
         <div class="content-container about">
             <h3>About this game</h3>
             <hr>
             <span>
-                Cyberpunk 2077 is an open-world, action-adventure RPG set in the megalopolis of Night City, where you
-                play as a cyberpunk mercenary wrapped up in a do-or-die fight for survival. Improved and featuring
-                all-new free additional content, customize your character and playstyle as you take on jobs, build a
-                reputation, and unlock upgrades. The relationships you forge and the choices you make will shape the
-                story and the world around you. Legends are made here. What will yours be? <br><br><img class="bb_img"
-                    src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2622380/extras/GRS_STEAM_GIF01_RISE_TOGETHER.gif?t=1749150157" />
-                <h2 class="bb_tag">RISE TOGETHER</h2>Cyberpunk 2077 is an open-world, action-adventure RPG set in the
-                megalopolis of Night City, where you play as a cyberpunk mercenary wrapped up in a do-or-die fight for
-                survival. Improved and featuring all-new free additional content, customize your character and playstyle
-                as you take on jobs, build a reputation, and unlock upgrades. The relationships you forge and the
-                choices you make will shape the story and the world around you. Legends are made here. What will yours
-                be? .<br><br><img class="bb_img"
-                    src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2622380/extras/GRS_STEAM_GIF02_BECOME_A_HERO.gif?t=1749150157" />
-                <h2 class="bb_tag">BECOME A HERO</h2>Take command of uniquely skilled heroes, each possessing their own
-                abilities and distinct flair. While individually formidable, their skills create powerful synergies when
-                they unite as a team.<br><br><img class="bb_img"
-                    src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2622380/extras/GRS_STEAM_GIF03_TAKE_ON_THE_NIGHT.gif?t=1749150157" />
-                <h2 class="bb_tag">TAKE ON THE NIGHT</h2>Overcome a relentless environmental threat that sweeps through
-                a land that changes between each game session and defeat the magnificent boss of that night!
+                <%- game.about_the_game %>
             </span>
         </div>
     </div>
 
-
-
-
-    <!-- 2 divided -->
-
-
-
+    <!-- Right Side: Ratings, Info, Requirements -->
     <div class="right-container">
-        <!-- upper -->
+        <!-- Ratings -->
         <div class="box-container box-rating">
 
             <div class="rating-container">
                 <div class="rating-img">❤️</div>
-                <!-- <img class="rating-img"
-                    src="https://store.akamai.steamstatic.com/public/shared/images/userreviews/icon_thumbsUp_v6.png"
-                    alt=""> -->
 
                 <div class="rating-text">
+                    <!-- Recent Reviews -->
                     <p class="rating-text__item">
                         <strong>Recent Reviews:</strong>
                         <span class="rating-status">
@@ -64,6 +41,7 @@
                             <span class="rating-count">(8,644)</span>
                         </span>
                     </p>
+                    <!-- All Reviews -->
                     <p class="rating-text__item">
                         <strong>All Reviews:</strong>
                         <span class="rating-status">
@@ -74,59 +52,84 @@
                 </div>
             </div>
         </div>
-        <!-- middle -->
+        <!-- Game Informations -->
         <div class="box-container box-info">
 
             <img class="header-img"
-                src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2622380/header.jpg?t=1749150157"
+                src="<%= game.header_image %>"
                 alt="">
-
+            <!-- Short Description -->
             <div class="info-container">
                 <div class="info-short-description">
-                    ELDEN RING NIGHTREIGN is a standalone adventure within the ELDEN RING universe, crafted to offer
-                    players a new gaming experience by reimagining the game’s core design.
+                    <%= game.short_description  %>
                 </div>
 
-
+                <!-- Info List -->
                 <div class="info">
+                    <!-- Release Date -->
                     <p class="info__item">
                         <strong>Release Date:</strong>
-                        <span>28 Oct, 2003</span>
+                        <% if (game.release_date.coming_soon === false) { %>
+                            <span><%= game.release_date.date %></span>
+                        <% } else { %>
+                            <span><%= game.release_date.date %></span>
+                        <% } %>
                     </p>
+                    <!-- Platforms -->
                     <p class="info__item">
                         <strong>Platform:</strong>
                         <span class="platforms">
+                        <% if (game.platforms?.windows) { %>
                             <span class="platform w">Windows</span>
-                            <span class="platform m">MacOS</span>
-                            <span class="platform l">Linux</span>
-                        </span>
+                        <% } %>
 
+                        <% if (game.platforms?.mac) { %>
+                            <span class="platform m">MacOS</span>
+                        <% } %>
+
+                        <% if (game.platforms?.linux) { %>
+                            <span class="platform l">Linux</span>
+                        <% } %>
+                        </span>
                     </p>
+                    <!-- Developer -->
+                    <% if (game.publishers) { %>
                     <p class="info__item">
                         <strong>Developer:</strong>
-                        <span>Good Guys</span>
+                        <% for (let i = 0; i < game.developers.length; i++) { %>
+                        <span><%= game.developers[i]  %></span>
+                        <% } %>
                     </p>
-                    <p class="info__item">
-                        <strong>Publisher:</strong>
-                        <span>They are fine</span>
-                    </p>
+                    <% } %>
+                    <!-- Publisher -->
+                    <% if (game.publishers) { %>
+                        <p class="info__item">
+                            <strong>Publisher:</strong>
+                            <% for (let i = 0; i < game.publishers.length; i++) { %>
+                            <span><%= game.publishers[i]  %></span>
+                            <% } %>
+                        </p>
+                    <% } %>
+
+                    <!-- AppID -->
                     <p class="info__item">
                         <strong>App ID:</strong>
-                        <span>0001</span>
+                        <span><%= game.steam_appid %></span>
                     </p>
-                    <p class="info__item">
-                        <strong>Genres:</strong>
-                        <span class="genre-tags">
-                            <span class="genre-tag">Open World</span>
-                            <span class="genre-tag">Open World</span>
-                            <span class="genre-tag">Open World</span>
-                            <span class="genre-tag">Open World</span>
-                            <span class="genre-tag">Open World</span>
-                            <span class="genre-tag">Open World</span>
-                        </span>
-                    </p>
+                    <!-- Genres -->
+                     <% if (game.genres) { %>
+                        <p class="info__item">    
+                            <strong>Genres:</strong>
+                            <span class="genre-tags">
+                            <% for (let i = 0; i < game.genres.length; i++) { %>
+                                <span class="genre-tag"><%= game.genres[i].description  %></span>
+                            <% } %>
+                            </span>
+                        </p>
+                    <% } %>
                 </div>
-                <a href="https://store.steampowered.com/app/2622380" target="_blank">
+                <!-- Price -->
+                <a href="https://store.steampowered.com/app/<%= game.steam_appid %>" target="_blank">
                     <div class="price-container">
                         <div class="price-items">
                             <img width="50"
@@ -134,13 +137,67 @@
                                 alt="Steam">
 
                             <div class="price-info">
-                                <span class="discount">
-                                    -90%
-                                </span>
-                                <span>
-                                    <span class="original-price">$99.99</span>
-                                    <span class="current-price">$9.99</span>
-                                </span>
+                                <!-- Free -->
+                                <% if (game.is_free) { %>
+                                    <p class="game-price">
+                                        <span class="current-price">
+                                            <strong>Free</strong>
+                                        </span>
+                                    </p>
+
+                                <!-- "Coming soon" OR "To be announced" game -->
+                                <% } else if (game.release_date.coming_soon === true) { %>
+                                    <p class="game-price">
+                                        <span class="current-price">
+                                            <strong><%= game.release_date.date %></strong>
+                                        </span>
+                                    </p>
+
+                                <!-- If price data exist -->
+                                <% } else if (game.price_overview) { %>
+                                    <!-- If there is discount -->
+                                    <% if (game.price_overview.discount_percent > 0) { %>
+
+                                        <!-- Only choose 1 class depending on result data. Red (0 - 40), Yellow (41 - 65), Green (66 - 100). If there is no data, then leave the class empty '' -->
+                                        <% let colorClass = game.price_overview.discount_percent <= 40 ? 'game-price__discount-red': 
+                                                            game.price_overview.discount_percent <= 65 ? 'game-price__discount-yellow':
+                                                            game.price_overview.discount_percent <= 100 ? 'game-price__discount-green': '';
+                                        %>
+
+                                        <p class="game-price">
+                                            <!-- Discount Percentage -->
+                                            <span class="discount <%= colorClass %>">
+                                                -<%= game.price_overview.discount_percent %>%
+                                            </span>
+                                            <span class="oc-price">
+                                                <!-- Original Price -->
+                                                <span class="original-price">
+                                                    <%= game.price_overview.initial_formatted %>
+                                                </span>
+                                                <!-- Final Discount Price -->
+                                                <span class="current-price">
+                                                    <%= game.price_overview.final_formatted %>
+                                                </span>
+                                            </span>
+                                            
+                                        </p>
+                                    <!-- Otherwise, just show original price (A.k.a. Final price) -->
+                                    <% } else { %>
+                                        <p class="game-price">
+                                            <span class="current-price">
+                                                <%= game.price_overview.final_formatted %>
+                                            </span>
+                                        </p>
+                                    <% } %>
+                                    
+                                <!-- If none of those price data exist, then show 'N/A' -->
+                                <% } else { %>
+                                    <p class="game-price">
+                                        <span class="current-price">
+                                            <em>N/A</em>
+                                        </span>
+                                    </p>
+                                <% } %>
                             </div>
                         </div>
                     </div>
@@ -148,30 +205,40 @@
 
             </div>
         </div>
-
-        <!-- end -->
+        <!-- System Requirements -->
         <div class="box-container box-requirement">
             <h3>System Requirements</h3>
-
+            <!-- Platform Icons -->
             <div class="platform-icons-container">
                 <hr>
-                <div>
-                    <img class="platform-icon"
-                        src="https://images.seeklogo.com/logo-png/40/2/windows-11-icon-logo-png_seeklogo-406208.png"
-                        alt="Windows">
-                    <img class="platform-icon"
-                        src="https://cdn4.iconfinder.com/data/icons/flat-design-development-set-3/24/platform-mac-os-512.png"
-                        alt="MacOS">
-                    <img class="platform-icon" src="https://cdn-icons-png.flaticon.com/512/6124/6124995.png"
-                        alt="Linux">
+                <div class="p-icons">
+                    <% if (game.platforms?.windows) { %>
+                        <button class="icon-btn windows">
+                        <img class="platform-icon" src="https://images.seeklogo.com/logo-png/40/2/windows-11-icon-logo-png_seeklogo-406208.png" alt="Windows">
+
+                        </button>
+                    <% } %>
+
+                    <% if (game.platforms?.mac) { %>
+                        <button class="icon-btn mac">
+                            <img class="platform-icon" src="https://cdn4.iconfinder.com/data/icons/flat-design-development-set-3/24/platform-mac-os-512.png" alt="MacOS">
+                        </button>
+                    <% } %>
+
+                    <% if (game.platforms?.linux) { %>
+                        <button class="icon-btn linux">
+                            <img class="platform-icon" src="https://cdn-icons-png.flaticon.com/512/6124/6124995.png" alt="Linux">
+                        </button>
+                    <% } %>
+                    
                 </div>
 
                 <hr>
             </div>
-
+            <!-- Min & Max System Requirements -->
             <div class="system-requirements">
                 <div class="min-requirement">
-                    <strong class="minimum">Minimum:</strong><br>
+                    <strong class="minimum">MINIMUM</strong><br>
                     <ul class="req-ul">
                         <li>Requires a 64-bit processor and operating system<br></li>
                         <li><strong>OS:</strong> Windows 10<br></li>
@@ -185,7 +252,7 @@
                 </div>
                 <hr class="req-line">
                 <div class="max-requirement">
-                    <strong class="maximum">Recommended:</strong><br>
+                    <strong class="maximum">RECOMMENDED</strong><br>
                     <ul class="req-ul">
                         <li>Requires a 64-bit processor and operating system<br></li>
                         <li><strong>OS:</strong> Windows 11<br></li>
@@ -203,5 +270,4 @@
     </div>
 
 </div>
-
 <%- include('partials/footer.ejs') %>
