@@ -12,6 +12,6 @@ export const log = console.log;
 
 export function cleanExit(saveData) {
     log(chalk.yellow('\nSaving final progress before shutdown...'));
-    saveData();
+    // saveData();
     process.exit(0);
 }
