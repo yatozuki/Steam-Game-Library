@@ -16,6 +16,7 @@ export async function getHomePage(req, res) {
         if (games === 429) {
             res.render('error', {
                 query,
+                game: null,
                 caption: "Reached Steam API Limit!",
                 message: "Unfortunately, you’ve hit the Steam API limit. Please wait a few minutes before trying again.",
                 error: "Request failed with status code 429"
@@ -36,6 +37,7 @@ export async function getHomePage(req, res) {
         log(chalk.bgRed('Page error', error.message));
         res.render('error', {
             query,
+            game: null,
             caption: "Something is wrong!",
             message: 'Failed to load home page',
             error: error.message

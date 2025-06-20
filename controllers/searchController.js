@@ -38,6 +38,7 @@ export async function searchGames(req, res) {
         log(chalk.red('Search error:', error));
         return res.render('error', {
             query,
+            game: null,
             caption: "Something is wrong!",
             message: 'Failed to load search result',
             error: error.message
