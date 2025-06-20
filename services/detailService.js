@@ -4,6 +4,7 @@ import { log } from '../utils/helpers.js';
 import chalk from 'chalk';
 import axios from 'axios';
 
+
 export async function detailData(appid) {
     const detailCache = myCache.get(appid);
     if (detailCache) {

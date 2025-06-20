@@ -1,0 +1,60 @@
+* {
+  box-sizing: border-box;
+  -webkit-touch-callout: none;
+
+  /* outline: 1px solid red;  */
+}
+
+/* *:hover {
+  outline: 2px solid #dddddd !important;
+  outline-offset: 2px;
+  position: relative;
+}
+
+*:hover::after {
+  content: attr(class) " #" attr(id);
+  position: absolute;
+  top: -25px;
+  left: 0;
+  background: #000;
+  color: #fff;
+  padding: 2px 5px;
+  font-size: 12px;
+  font-family: Arial, sans-serif;
+  border-radius: 3px;
+  z-index: 9999;
+  pointer-events: none;
+  white-space: nowrap;
+} */
+
+
+body {
+    color: #c5c5c5;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+hr {
+    border: 2px solid #c5c5c5;
+}
+
+h1 {
+    text-align: center;
+    margin: 40px 0;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+button, a, input [role="button"] {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.container {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    column-gap: 3rem;
+}
+

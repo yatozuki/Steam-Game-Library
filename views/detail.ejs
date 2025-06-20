@@ -7,11 +7,67 @@
 <div class="container">
     <!-- Left Side: Image, Video, Description -->
     <div class="left-container">
-        <!-- Game Carousel Images -->
+
         <div class="content-container visual">
-            <img width="800"
-                src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2622380/ss_edfd360b92d6f9b983b759fd837e664b86cd9563.600x338.jpg?t=1749150157"
-                alt="">
+            <div class="carousel-wrapper">
+                <button class="carousel-nav prev" aria-label="Previous">&lt;</button>
+
+                <div class="main-carousel">
+
+                    <% if (game.movies) { %>
+                        <% for (let i = 0; i < game.movies.length; i++) { %>
+                            <div class="carousel-item" data-index="<%= (game.screenshots ? game.screenshots.length : 0) + i %>">
+                                <video class="game-video" preload="metadata" controls poster="<%= game.movies[i].thumbnail %>" loading="lazy" playsinline>
+                                    <source src="<%= game.movies[i].mp4['480'] %>" type="video/mp4" title="480">
+                                    <source src="<%= game.movies[i].mp4.max %>" type="video/mp4" title="Full HD">
+                                    <source src="<%= game.movies[i].webm['480'] %>" type="video/webm" title="480">
+                                    <source src="<%= game.movies[i].webm.max %>" type="video/webm" title="Full HD">
+                                    
+                                    Your browser does not support the video tag.
+                                </video>
+                            </div>
+                        <% } %>
+                    <% } %>
+
+                    <% if (game.screenshots) { %>
+                        <% for (let i = 0; i < game.screenshots.length; i++) { %>
+                            <div class="carousel-item" data-index="<%= i %>">
+                                <img src="<%= game.screenshots[i].path_thumbnail || game.screenshots[i].path_full %>" alt="<%= game.name %> screenshot <%= i+1 %>" loading="lazy">
+                            </div>
+                        <% } %>
+                    <% } %>
+                    
+                </div>
+
+                <button class="carousel-nav next" aria-label="Next">&gt;</button>
+
+            </div>
+            
+            <!-- Thumbnail strip -->
+            <% if (game.screenshots.length > 0 || game.movies.length > 0) { %>
+                <div class="thumbnail-strip-wrapper">
+                    <div class="thumbnail-strip">
+                        <% if (game.movies) { %>
+                            <% for (let i = 0; i < game.movies.length; i++) { %>
+                                <div class="thumbnail-item" data-index="<%= (game.screenshots ? game.screenshots.length : 0) + i %>">
+                                    <img src="<%= game.movies[i].thumbnail %>" alt="Video thumbnail <%= i+1 %>" loading="lazy">
+                                    <div class="video-indicator">▶</div>
+                                </div>
+                            <% } %>
+                        <% } %>
+                        <% if (game.screenshots) { %>
+                            <% for (let i = 0; i < game.screenshots.length; i++) { %>
+                                <div class="thumbnail-item" data-index="<%= i %>">
+                                    <img src="<%= game.screenshots[i].path_thumbnail || game.screenshots[i].path_full %>" alt="Thumbnail <%= i+1 %>" loading="lazy">
+                                </div>
+                            <% } %>
+                        <% } %>
+                        
+                        
+                    </div>
+                </div>
+
+            <% } %>
         </div>
 
         <!-- Game Description -->
@@ -140,8 +196,8 @@
                                 <!-- Free -->
                                 <% if (game.is_free) { %>
                                     <p class="game-price">
-                                        <span class="current-price">
-                                            <strong>Free</strong>
+                                        <span class="current-price free">
+                                            <strong class="free-tag">Free</strong>
                                         </span>
                                     </p>
 
@@ -184,7 +240,7 @@
                                     <!-- Otherwise, just show original price (A.k.a. Final price) -->
                                     <% } else { %>
                                         <p class="game-price">
-                                            <span class="current-price">
+                                            <span class="current-price single">
                                                 <%= game.price_overview.final_formatted %>
                                             </span>
                                         </p>
@@ -215,7 +271,6 @@
                     <% if (game.platforms?.windows) { %>
                         <button class="icon-btn windows">
                         <img class="platform-icon" src="https://images.seeklogo.com/logo-png/40/2/windows-11-icon-logo-png_seeklogo-406208.png" alt="Windows">
-
                         </button>
                     <% } %>
 
@@ -236,38 +291,34 @@
                 <hr>
             </div>
             <!-- Min & Max System Requirements -->
-            <div class="system-requirements">
-                <div class="min-requirement">
-                    <strong class="minimum">MINIMUM</strong><br>
-                    <ul class="req-ul">
-                        <li>Requires a 64-bit processor and operating system<br></li>
-                        <li><strong>OS:</strong> Windows 10<br></li>
-                        <li><strong>Processor:</strong> Intel Core i5-10600 / AMD RYZEN 5 5500<br></li>
-                        <li><strong>Memory:</strong> 12 GB RAM<br></li>
-                        <li><strong>Graphics:</strong> NVIDIA GeForce GTX 1060 3GB / AMD Radeon RX 580 4GB<br></li>
-                        <li><strong>DirectX:</strong> Version 12<br></li>
-                        <li><strong>Storage:</strong> 30 GB available space<br></li>
-                        <li><strong>Sound Card:</strong> Windows compatible audio device</li>
-                    </ul>
+            <% if (min.length > 0 || max.length > 0) { %>
+                <div class="system-requirements">
+                    <% if (min.length > 0) { %>
+                        <div class="min-requirement">
+                            <strong class="minimum">MINIMUM</strong><br>
+                            <ul class="req-ul">
+                                <li><%- min %></li>
+                            </ul>
+                        </div>
+                    <% } %>
+                    <% if (max.length > 0) { %>
+                        <hr class="req-line">
+                        <div class="max-requirement">
+                            <strong class="maximum">RECOMMENDED</strong><br>
+                            <ul class="req-ul">
+                                <li><%- max %></li>
+                            </ul>
+                        </div>
+                    <% } %>
                 </div>
-                <hr class="req-line">
-                <div class="max-requirement">
-                    <strong class="maximum">RECOMMENDED</strong><br>
-                    <ul class="req-ul">
-                        <li>Requires a 64-bit processor and operating system<br></li>
-                        <li><strong>OS:</strong> Windows 11<br></li>
-                        <li><strong>Processor:</strong> Intel Core i5-11500 / AMD RYZEN 5 5600<br></li>
-                        <li><strong>Memory:</strong> 16 GB RAM<br></li>
-                        <li><strong>Graphics:</strong> NVIDIA GeForce GTX 1070 8GB / AMD Radeon RX Vega-56 8GB<br></li>
-                        <li><strong>DirectX:</strong> Version 12<br></li>
-                        <li><strong>Storage:</strong> 30 GB available space<br></li>
-                        <li><strong>Sound Card:</strong> Windows compatible audio device</li>
-                    </ul>
+            <% } else { %>
+                <div class="system-requirements">
+                    <div>
+                        <ul class="default-ul"><li><%- game.pc_requirements.minimum %></li></ul>
+                    </div>
                 </div>
-            </div>
-
+            <% } %>
         </div>
     </div>
-
 </div>
 <%- include('partials/footer.ejs') %>
