@@ -1,0 +1,152 @@
+        <div class="box-container box-info">
+
+            <img class="header-img"
+                src="<%= game.header_image %>"
+                alt="">
+            <!-- Short Description -->
+            <div class="info-container">
+                <div class="info-short-description">
+                    <%= game.short_description  %>
+                </div>
+
+                <!-- Info List -->
+                <div class="info">
+                    <!-- Release Date -->
+                    <p class="info__item">
+                        <strong>Release Date:</strong>
+                        <% if (game.release_date.coming_soon === false) { %>
+                            <span><%= game.release_date.date %></span>
+                        <% } else { %>
+                            <span><%= game.release_date.date %></span>
+                        <% } %>
+                    </p>
+                    <!-- Platforms -->
+                    <p class="info__item">
+                        <strong>Platform:</strong>
+                        <span class="platforms">
+                        <% if (game.platforms?.windows) { %>
+                            <span class="platform w">Windows</span>
+                        <% } %>
+
+                        <% if (game.platforms?.mac) { %>
+                            <span class="platform m">MacOS</span>
+                        <% } %>
+
+                        <% if (game.platforms?.linux) { %>
+                            <span class="platform l">Linux</span>
+                        <% } %>
+                        </span>
+                    </p>
+                    <!-- Developer -->
+                    <% if (game.publishers) { %>
+                    <p class="info__item">
+                        <strong>Developer:</strong>
+                        <% for (let i = 0; i < game.developers.length; i++) { %>
+                        <span><%= game.developers[i]  %></span>
+                        <% } %>
+                    </p>
+                    <% } %>
+                    <!-- Publisher -->
+                    <% if (game.publishers) { %>
+                        <p class="info__item">
+                            <strong>Publisher:</strong>
+                            <% for (let i = 0; i < game.publishers.length; i++) { %>
+                            <span><%= game.publishers[i]  %></span>
+                            <% } %>
+                        </p>
+                    <% } %>
+
+                    <!-- AppID -->
+                    <p class="info__item">
+                        <strong>App ID:</strong>
+                        <span><%= game.steam_appid %></span>
+                    </p>
+                    <!-- Genres -->
+                     <% if (game.genres) { %>
+                        <p class="info__item">    
+                            <strong>Genres:</strong>
+                            <span class="genre-tags">
+                            <% for (let i = 0; i < game.genres.length; i++) { %>
+                                <span class="genre-tag"><%= game.genres[i].description  %></span>
+                            <% } %>
+                            </span>
+                        </p>
+                    <% } %>
+                </div>
+                <!-- Price -->
+                <a href="https://store.steampowered.com/app/<%= game.steam_appid %>" target="_blank">
+                    <div class="price-container">
+                        <div class="price-items">
+                            <img width="50"
+                                src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Steam_icon_logo.svg/1280px-Steam_icon_logo.svg.png"
+                                alt="Steam">
+
+                            <div class="price-info">
+                                <!-- Free -->
+                                <% if (game.is_free) { %>
+                                    <p class="game-price">
+                                        <span class="current-price free">
+                                            <strong class="free-tag">Free</strong>
+                                        </span>
+                                    </p>
+
+                                <!-- "Coming soon" OR "To be announced" game -->
+                                <% } else if (game.release_date.coming_soon === true) { %>
+                                    <p class="game-price">
+                                        <span class="current-price">
+                                            <strong><%= game.release_date.date %></strong>
+                                        </span>
+                                    </p>
+
+                                <!-- If price data exist -->
+                                <% } else if (game.price_overview) { %>
+                                    <!-- If there is discount -->
+                                    <% if (game.price_overview.discount_percent > 0) { %>
+
+                                        <!-- Only choose 1 class depending on result data. Red (0 - 40), Yellow (41 - 65), Green (66 - 100). If there is no data, then leave the class empty '' -->
+                                        <% let colorClass = game.price_overview.discount_percent <= 40 ? 'game-price__discount-red': 
+                                                            game.price_overview.discount_percent <= 65 ? 'game-price__discount-yellow':
+                                                            game.price_overview.discount_percent <= 100 ? 'game-price__discount-green': '';
+                                        %>
+
+                                        <p class="game-price">
+                                            <!-- Discount Percentage -->
+                                            <span class="discount <%= colorClass %>">
+                                                -<%= game.price_overview.discount_percent %>%
+                                            </span>
+                                            <span class="oc-price">
+                                                <!-- Original Price -->
+                                                <span class="original-price">
+                                                    <%= game.price_overview.initial_formatted %>
+                                                </span>
+                                                <!-- Final Discount Price -->
+                                                <span class="current-price">
+                                                    <%= game.price_overview.final_formatted %>
+                                                </span>
+                                            </span>
+                                            
+                                        </p>
+                                    <!-- Otherwise, just show original price (A.k.a. Final price) -->
+                                    <% } else { %>
+                                        <p class="game-price">
+                                            <span class="current-price single">
+                                                <%= game.price_overview.final_formatted %>
+                                            </span>
+                                        </p>
+                                    <% } %>
+                                    
+                                <!-- If none of those price data exist, then show 'N/A' -->
+                                <% } else { %>
+                                    <p class="game-price">
+                                        <span class="current-price">
+                                            <em>N/A</em>
+                                        </span>
+                                    </p>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+
+            </div>
+        </div>

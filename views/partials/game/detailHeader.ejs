@@ -10,6 +10,21 @@
     <link rel="stylesheet" href="/css/game/rightPage.css">
 
     <script src="https://kit.fontawesome.com/e607f8467c.js" crossorigin="anonymous"></script>
-    <title>SGL</title>
+    
+    <% if (game.price_overview) { %>
+        <% if (game.price_overview.discount_percent) { %>
+            <title>Save <%= game.price_overview.discount_percent %>% on <%= game.name %></title>
+        <% } else { %>
+            <title><%= game.name %></title>
+        <% } %>
+    <% } else { %>
+        <% if (game.release_date.coming_soon === true) { %>
+            <title><%= game.name %> (<%= game.release_date.date %>) </title>
+
+        <% } else { %>
+            <title><%= game.name %></title>
+        <% } %>
+    <% } %>
+
 </head>
 <body>

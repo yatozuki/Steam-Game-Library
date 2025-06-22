@@ -54,49 +54,67 @@
     display: block;
     border-radius: 8px;
     background: #1a1a1a;
-
 }
 
 .carousel-nav {
-    width: 80px;
-    height: 80px;
-    border-radius: 0 10px 10px 0;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    /* border-radius: 0 10px 10px 0; */
     background: rgba(0, 0, 0, 0.3);
-    color: #ffffffb5;
     border: none;
-    font-size: 20px;
     font-weight: bold;
     cursor: pointer;
     position: absolute;
     z-index: 10;
-    transition: all 0.3s ease;
     flex-shrink: 0;
 }
 
-@media (hover:hover) {
-    .carousel-nav:hover {
-        color: #ffff;
-        transform: scale(1.5);
+.carousel-nav.prev {
+    left: 10px;
+}
 
+.carousel-nav.next {
+    border-radius: 50%;
+    right: 10px;
+}
+
+.carousel-btn {
+    right: 2px;
+    width: 60px;
+    height: 60px;
+    background: transparent;
+    color: #a9a9a9;
+    border: none;
+    position: relative;
+    font-size: 40px;
+    transition: all 0.3s ease;
+}
+
+.carousel-btn.R {
+    position: absolute;
+    left: 2px;
+    height: 60px;
+}
+
+@media (hover:hover) {
+    .carousel-btn:hover {
+        color: #ffff;
+        transform: scale(1.2);
     }
 }
 
-.carousel-nav:disabled {
+.carousel-btn:disabled {
     opacity: 0.3;
     cursor: not-allowed;
 }
 
 @media (pointer:coarse) {
-    .carousel-nav:active {
+    .carousel-btn:active {
         color: #ffff;
-        transform: scale(1.5);
+        transform: scale(1.2);
         transition: transform 0.05s ease;
     }
-}
-
-.carousel-nav.next {
-    border-radius: 10px 0 0 10px;
-    right: 0;
 }
 
 .thumbnail-strip-wrapper  {
@@ -119,6 +137,7 @@
 }
 
 .thumbnail-strip::-webkit-scrollbar {
+    scrollbar-color: rgba(255, 255, 255, 0.678) rgba(0, 0, 0, 0.5);
     height: 8px;
 }
 
@@ -137,11 +156,11 @@
     width: 160px;
     height: 90px;
     position: relative;
-    cursor: pointer;
-    border: 2px solid transparent;
+    /* cursor: pointer; */
+    border: 3px solid transparent;
     border-radius: 2px;
     overflow: hidden;
-    transition: all 0.2s;
+    transition: all 0.1s ease;
 }
 
 @media (hover:hover) {
@@ -155,11 +174,17 @@
 }
 
 @media (pointer:coarse) {
-    .thumbnail-item.active {
+    .thumbnail-item:active {
         border-color: rgba(255, 255, 255, 0.5);
+    }
+
+    .thumbnail-item.active {
         border-color: #66c0f4;
+
     }
 }
+
+
 
 .thumbnail-item img {
     width: 100%;
