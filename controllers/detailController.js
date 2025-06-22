@@ -1,8 +1,7 @@
-import { detailData } from '../services/detailService.js';
+import { detailData, pcRequirements } from '../services/detailService.js';
 import { log } from '../utils/helpers.js';
-import * as cheerio from 'cheerio';
 import chalk from 'chalk';
-
+log(pcRequirements)
 export let gameDetail_dev = [];
 
 export async function getGameDetail(req, res) {
@@ -25,14 +24,6 @@ export async function getGameDetail(req, res) {
             });
 
         } else {
-            const $min = cheerio.load(String(game.data.pc_requirements.minimum));
-            const $rec = cheerio.load(String(game.data.pc_requirements.recommended));
-
-            const minRequirements = $min('ul.bb_ul li').map((i, el) => $min.html(el)).get().join('');
-            const recRequirements = $rec('ul.bb_ul li').map((i, el) => $rec.html(el)).get().join('');
-            
-            // log(`${minRequirements.length}, ${recRequirements.length}`)
-            
             const dataExist = gameDetail_dev.some(g => 
                 g.data.steam_appid === game.data.steam_appid
             );
@@ -46,8 +37,7 @@ export async function getGameDetail(req, res) {
             res.render('detail', {
                 query,
                 game: game.data,
-                min: minRequirements,
-                max: recRequirements
+                requirements: pcRequirements
             });
 
         }
@@ -55,6 +45,7 @@ export async function getGameDetail(req, res) {
         log(chalk.bgRed('Error', error.message));
         res.render('error', {
             query,
+            game: null,
             caption: "Something is wrong!",
             message: 'Failed to load game detail',
             error: error.message
