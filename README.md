@@ -17,22 +17,22 @@
 
 ## 📑 Table of Contents
 
-- [📝 Description](#-description)
-- [🚨 Warning](#-warning)
-	- [🚫 NSFW Content](#-nsfw-content)
-	- [⏳ Steam API Rate Limits](#-steam-api-rate-limits)
-	- [👍 Safe Usage](#-safe-usage)
-	- [📜 Terms of Use](#-terms-of-use)
-- [💻 Compatibility](#-compatibility)
-- [👨‍💻 Setup](#-setup)
-- [🚀 Usage](#-usage)
-	- [🌐 Browsing the Library](#-browsing-the-library)
-	- [🔍 Searching for Games](#-searching-for-games)
-	- [💾 Caching and Saving Data](#-caching-and-saving-data)
-- [📷 Screenshots](#-screenshots)
-- [🐞 Known Bugs](#-known-bugs)
-- [📂 Note](#-note)
-- [🤝 Contributing](#-contributing)
+- [Description](#-description)
+- [Warning](#-warning)
+	- [NSFW Content](#-nsfw-content)
+	- [Steam API Rate Limits](#-steam-api-rate-limits)
+	- [Safe Usage](#-safe-usage)
+	- [Terms of Use](#-terms-of-use)
+- [Compatibility](#-compatibility)
+- [Setup](#-setup)
+- [Usage](#-usage)
+	- [Browsing the Library](#-browsing-the-library)
+	- [Searching for Games](#-searching-for-games)
+	- [Caching and Saving Data](#-caching-and-saving-data)
+- [Screenshots](#-screenshots)
+- [Known Bugs](#-known-bugs)
+- [Note](#-note)
+- [Contributing](#-contributing)
 
 ---
 
