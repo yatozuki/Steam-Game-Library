@@ -52,6 +52,7 @@
 .game-title {
     text-align: center;
     font-size: 0.78rem;
+    font-weight: bold;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
