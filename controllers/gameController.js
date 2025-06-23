@@ -1,5 +1,6 @@
 import { gameFilter, getTotalPages } from '../services/gameService.js';
 import { getGameData } from '../services/dataService.js'
+import { searchData } from '../services/scrapeService.js'
 import { gameDetail_dev } from './detailController.js';
 import { perPage } from '../config/constants.js';
 import { log } from '../utils/helpers.js';
@@ -52,6 +53,8 @@ export function getDevTool(req, res) {
         noInfo: ignoreID,
         DLC: dlcGames,
         Games: actualGames,
-        Detail: gameDetail_dev
+        Detail: gameDetail_dev,
+        Search_Result: searchData
+
     });
 }

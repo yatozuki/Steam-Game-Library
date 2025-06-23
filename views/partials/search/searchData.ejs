@@ -12,7 +12,7 @@
     <ul class="container">
         <!-- Pass through result one by one -->
         <% results.forEach(game => { %>
-            <% if (game) { %>
+            <% if (game.steam_appid || game.bundle_id) { %>
                 <!-- Whole game item including: Header image, Title, Price, Link to detail page -->
                 <li class="item">
                 <!-- If {appid} and no "," {001, 002, 003} -->

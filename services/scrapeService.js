@@ -1,9 +1,12 @@
 import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import { myCache, cacheTime } from '../config/cache.js';
-import {Scrape_MS } from '../config/constants.js';
+import { Scrape_MS } from '../config/constants.js';
 import { time, log } from '../utils/helpers.js';
 import chalk from 'chalk';
+
+
+export let searchData = [];
 
 puppeteer.use(StealthPlugin());
 
@@ -36,7 +39,7 @@ export async function scrapeSteamSearch(query, maxResults = 100) {
 
         await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
     
-        await page.goto(`https://store.steampowered.com/search/?term=${encodeURIComponent(query)}`, {
+        await page.goto(`https://store.steampowered.com/search/?term=${encodeURIComponent(query)}&ignore_preferences=1`, {
             waitUntil: 'networkidle2',
             timeout: 30000
         });
@@ -44,7 +47,7 @@ export async function scrapeSteamSearch(query, maxResults = 100) {
         try {
             log(chalk.yellow(`[${time()}] Waiting for the selector...`));
 
-            await page.waitForSelector('#search_resultsRows');
+            await page.waitForSelector('#search_results');
 
         } catch (error) {
             log(chalk.red(`[${time()}] Nothing is found`));
@@ -54,18 +57,55 @@ export async function scrapeSteamSearch(query, maxResults = 100) {
         }
         
         while (attempts < maxAttempts && results.length < maxResults) {
-            const newResults = await page.evaluate(() => {
+            const newResults = await page.evaluate(async () => {
                 const items = [];
-                document.querySelectorAll('#search_resultsRows a').forEach(item => {
+                const elements = document.querySelectorAll('#search_results a') 
+                
+                for (const item of elements) {
                     const appId = item.getAttribute('data-ds-appid');
                     const bundleId = item.getAttribute('data-ds-bundleid');
-                    const originalImgUrl = appId ? `https://cdn.akamai.steamstatic.com/steam/apps/${appId}/header.jpg` : null;
-                    const altImgUrl = item.querySelector('img')?.src.replace(/capsule_sm_120\.jpg/g, 'header.jpg');
-                        
+
                     const discountText = item.querySelector('.discount_pct')?.innerText.trim();
                     const discountPercent = discountText ? parseInt(discountText.replace(/[%-]/g, ''), 10) : 0;
 
                     const finalPrice = item.querySelector('.discount_final_price')?.innerText.toString().replace('Your Price:\n', '').trim();
+
+                    let capsuleImg;
+
+                    if (item.querySelector('img')?.srcset) {
+                        try {
+                            capsuleImg = item.querySelector('img').srcset
+                                .split(',')
+                                .map(s => s.trim())
+                                .find(s => s.includes('2x'))
+                                ?.split(' ')[0];
+                        } catch (e) {
+                            capsuleImg = item.querySelector('img')?.src;
+                        }
+                    } else {
+                        capsuleImg = item.querySelector('img')?.src;
+                    }
+
+                    const headerUrl = `https://cdn.akamai.steamstatic.com/steam/apps/${appId || bundleId}/header.jpg`
+
+                    let finalImageUrl = capsuleImg;
+
+                    if (headerUrl) {
+                        try {
+                            const img = new Image();
+                            const isLoaded = await new Promise((resolve) => {
+                                img.onload = () => resolve(true);
+                                img.onerror = () => resolve(false);
+                                img.src = headerUrl;
+                            });
+                            
+                            if (isLoaded) {
+                                finalImageUrl = headerUrl;
+                            }
+
+                        } catch (e) {}
+                    }
+
                     items.push({
                         steam_appid: appId,
                         bundle_id: bundleId,
@@ -73,11 +113,11 @@ export async function scrapeSteamSearch(query, maxResults = 100) {
                         original_price: item.querySelector('.discount_original_price')?.innerText.trim() || finalPrice,
                         final_price: finalPrice,
                         discount_percent: discountPercent,
-                        header_image: originalImgUrl || altImgUrl,
+                        header_image: finalImageUrl,
                         url: item.href,
                         coming_soon: item.querySelector('.search_released')?.innerText.trim()
                     });
-                });
+                };
                 return items;
             });
             
@@ -103,6 +143,8 @@ export async function scrapeSteamSearch(query, maxResults = 100) {
         
         log(chalk.green(`[${time()}] Total results for "${query}": ${results.length}`));
         myCache.set(cacheKey, results, cacheTime);
+
+        searchData.push(results);
         return results;
 
     } catch (error) {
