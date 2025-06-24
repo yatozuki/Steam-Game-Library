@@ -3,6 +3,7 @@ import { myCache, cacheTime } from '../config/cache.js';
 import { log } from '../utils/helpers.js';
 import axios from 'axios';
 import * as cheerio from 'cheerio';
+import chalk from 'chalk';
 
 export let pcRequirements = [];
 
@@ -39,12 +40,15 @@ export async function detailData(appid) {
             const linuxMin = $linuxMin('ul.bb_ul li').map((i, el) => $linuxMin.html(el)).get().join('');
             const linuxRec = $linuxRec('ul.bb_ul li').map((i, el) => $linuxRec.html(el)).get().join('');
 
-            pcRequirements.push(
-                {platform: "Windows", w_minimum: windowsMin, w_recommended: windowsRec},
-                {platform: "Mac", m_minimum: macMin, m_recommended: macRec},
-                {platform: "Linux", l_minimum: linuxMin, l_recommended: linuxRec}
-            )
-            log(pcRequirements)
+            pcRequirements.push([
+                appid, [
+                    {id: appid, platform: "Windows", w_minimum: windowsMin, w_recommended: windowsRec},
+                    {platform: "Mac", m_minimum: macMin, m_recommended: macRec},
+                    {platform: "Linux", l_minimum: linuxMin, l_recommended: linuxRec}
+                ]
+            ]);
+            
+            // log(pcRequirements.length);
             myCache.set(appid, result, cacheTime);
             return result;
         } else {

@@ -14,7 +14,7 @@ export async function getGameDetail(req, res) {
 
         if (!game.success) {
             const error = `Request failed with status code 404.<br><strong>${appid}: <br>{ "success": false }</strong>`;
-            const message = `It seem like steam (appid = ${appid}) data can't be fetch via public API. (Might be NSFW or Violent game)`
+            const message = `It seem like steam (appid = ${appid}) data can't be fetch via public API.`
             res.render('error', {
                 query,
                 game,
@@ -24,6 +24,17 @@ export async function getGameDetail(req, res) {
             });
 
         } else {
+            let requirements;
+
+            for (let idx = 0; idx < pcRequirements.length; idx++) {
+                if (pcRequirements[idx][0] === appid) {
+                    requirements = pcRequirements[idx][1];
+                    break;
+                }
+            }
+            // log(pcRequirements)
+            // log(`Requirements: ${requirements}`)
+
             const dataExist = gameDetail_dev.some(g => 
                 g.data.steam_appid === game.data.steam_appid
             );
@@ -37,7 +48,7 @@ export async function getGameDetail(req, res) {
             res.render('detail', {
                 query,
                 game: game.data,
-                requirements: pcRequirements
+                requirements
             });
 
         }
