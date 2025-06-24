@@ -1,57 +1,61 @@
 <div class="box-container box-requirement">
-            <h3>System Requirements</h3>
-            <!-- Platform Icons -->
-            <div class="platform-icons-container">
-                <hr>
-                <div class="p-icons">
-                    <% if (game.platforms?.windows) { %>
-                        <button class="icon-btn windows">
-                        <img class="platform-icon" src="https://images.seeklogo.com/logo-png/40/2/windows-11-icon-logo-png_seeklogo-406208.png" alt="Windows">
-                        </button>
-                    <% } %>
-
-                    <% if (game.platforms?.mac) { %>
-                        <button class="icon-btn mac">
-                            <img class="platform-icon" src="https://cdn4.iconfinder.com/data/icons/flat-design-development-set-3/24/platform-mac-os-512.png" alt="MacOS">
-                        </button>
-                    <% } %>
-
-                    <% if (game.platforms?.linux) { %>
-                        <button class="icon-btn linux">
-                            <img class="platform-icon" src="https://cdn-icons-png.flaticon.com/512/6124/6124995.png" alt="Linux">
-                        </button>
-                    <% } %>
-                    
-                </div>
-
-                <hr>
-            </div>
-            <!-- Min & Max System Requirements -->
-            <% if (requirements[0].w_minimum.length > 0 ||requirements[0].w_recommended.length > 0) { %>
-                <div class="system-requirements">
-                    <% if (requirements[0].w_minimum.length > 0) { %>
-                        <div class="min-requirement">
-                            <strong class="minimum">MINIMUM</strong><br>
-                            <ul class="req-ul">
-                                <li><%- requirements[0].w_minimum %></li>
-                            </ul>
-                        </div>
-                    <% } %>
-                    <% if (requirements[0].w_recommended.length > 0) { %>
-                        <!-- <hr class="req-line"> -->
-                        <div class="max-requirement">
-                            <strong class="maximum">RECOMMENDED</strong><br>
-                            <ul class="req-ul">
-                                <li><%- requirements[0].w_recommended %></li>
-                            </ul>
-                        </div>
-                    <% } %>
-                </div>
-            <% } else { %>
-                <div class="system-requirements">
-                    <div>
-                        <ul class="default-ul"><li><%- game.pc_requirements.minimum %></li></ul>
-                    </div>
-                </div>
+    <h3>System Requirements</h3>
+    <!-- Platform Icons -->
+    <div class="platform-icons-container">
+        <hr>
+        <div class="p-icons">
+            <% if (game.platforms?.windows) { %>
+            <button class="icon-btn windows" data-os="windows" data-min="<%- encodeURIComponent(requirements[0].w_minimum) %>" data-rec="<%- encodeURIComponent(requirements[0].w_recommended) %>" data-fall-back="<%- encodeURIComponent(game.pc_requirements.minimum) %>">
+                <img class="platform-icon"
+                    src="https://images.seeklogo.com/logo-png/40/2/windows-11-icon-logo-png_seeklogo-406208.png"
+                    alt="Windows">
+            </button>
             <% } %>
+
+            <% if (game.platforms?.mac) { %>
+            <button class="icon-btn mac" data-os="mac" data-min="<%- encodeURIComponent(requirements[1].m_minimum) %>" data-rec="<%- encodeURIComponent(requirements[1].m_recommended) %>" data-fall-back="<%- encodeURIComponent(game.mac_requirements.minimum) %>">
+                <img class="platform-icon"
+                    src="https://cdn4.iconfinder.com/data/icons/flat-design-development-set-3/24/platform-mac-os-512.png"
+                    alt="MacOS">
+            </button>
+            <% } %>
+
+            <% if (game.platforms?.linux) { %>
+            <button class="icon-btn linux" data-os="linux" data-min="<%- encodeURIComponent(requirements[2].l_minimum) %>" data-rec="<%- encodeURIComponent(requirements[2].l_recommended) %>" data-fall-back="<%- encodeURIComponent(game.linux_requirements.minimum) %>">
+                <img class="platform-icon" src="https://cdn-icons-png.flaticon.com/512/6124/6124995.png" alt="Linux">
+            </button>
+            <% } %>
+
         </div>
+
+        <hr>
+    </div>
+    <!-- Min & Max System Requirements -->
+ 
+    <div class="system-requirements">
+        <% if (requirements[0].w_minimum.length > 0) { %>
+            <div id="minContainer" class="min-requirement">
+                <strong class="minimum">MINIMUM</strong><br>
+                <ul class="req-ul" id="minReq">
+                    <li><%- requirements[0].w_minimum %></li>
+                </ul>
+            </div>
+        <% } %>
+        <% if (requirements[0].w_recommended.length > 0) { %>
+            <!-- <hr class="req-line"> -->
+            <div id="recContainer" class="max-requirement">
+                <strong class="maximum">RECOMMENDED</strong><br>
+                <ul class="req-ul" id="recReq">
+                    <li><%- requirements[0].w_recommended %></li>
+                </ul>
+            </div>
+        <% } %>
+
+
+        <div id="fallbackContainer">
+            <ul class="default-ul" id="fallback">
+                <li><%- game.pc_requirements.minimum %></li>
+            </ul>
+        </div>
+    </div>
+</div>
