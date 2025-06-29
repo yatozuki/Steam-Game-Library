@@ -48,7 +48,7 @@ export async function gameFilter(page, perPage) {
 
     while (validIDs.length < perPage) {
         if (startIdx < actualGames.length) {
-            const appID = actualGames[startIdx];
+            const appID = actualGames[(actualGames.length - 1) - startIdx];
             startIdx++;
 
             if (ignoreSet.has(appID) || dlcSet.has(appID) || skipSet.has(appID)) continue; 
@@ -105,7 +105,7 @@ export async function gameFilter(page, perPage) {
                 log(`Error processing ${appID}:`, error.message);
                 if (error.response?.status === 429) {
                     // await new Promise(resolve => setTimeout(resolve, Delay_MS));
-                    // saveData();
+                    saveData();
                     return error.response.status;
                 }
             }
@@ -120,7 +120,7 @@ export async function gameFilter(page, perPage) {
             if (cacheGame) {
                 validIDs.push(cacheGame.data);
                 validCollection++;
-                log(chalk.green(`[Game ${validCollection}/${perPage}] Loaded `)+ chalk.yellow(`[CACHED]`) + chalk.green(`: ${appID}`));
+                log(chalk.bgGreen(`[Game ${validCollection}/${perPage}] Loaded `)+ chalk.yellow(`[CACHED]`) + chalk.green(`: ${appID}`));
             }
             
             const existingDetail = detailInfo.find(game => game.steam_appid === appID);
@@ -130,7 +130,7 @@ export async function gameFilter(page, perPage) {
                     validIDs.push(existingDetail);
                     myCache.set(`game_${appID}`, { data: existingDetail }, cacheTime);
                     validCollection++;
-                    log(chalk.green(`[GAME ${validCollection}/${perPage}] Loaded `)+ chalk.yellow(`[STORAGE]`) + chalk.green(`: ${appID}`));
+                    log(chalk.bgGreen(`[GAME ${validCollection}/${perPage}] Loaded `)+ chalk.yellow(`[STORAGE]`) + chalk.green(`: ${appID}`));
                 }
                 continue;
             }
@@ -177,7 +177,7 @@ export async function gameFilter(page, perPage) {
                 log(`Error processing ${appID}:`, error.message);
                 if (error.response?.status === 429) {
                     // await new Promise(resolve => setTimeout(resolve, Delay_MS));
-                    // saveData();
+                    saveData();
                     return error.response.status;
                 }
             }
@@ -187,12 +187,33 @@ export async function gameFilter(page, perPage) {
     updateGameData({ actualGames, dlcGames, ignoreID, detailInfo, skipID, 
                     actualSet, dlcSet, ignoreSet, detailSet, skipSet });
     
-    // saveData();
+    saveData();
     log(`Total game: ${detailInfo.length}`);
+
+    const totalPage = getTotalPages();
+    const startIndex = Number((page - 1) * perPage)
+    const lastIndex = totalPage * perPage;
+
+    const indexResult = (endIdx - lastIndex) - perPage;
+
     if (detailInfo.length >= endIdx) {
-        return detailInfo.slice(Number((page - 1) * perPage), endIdx);
+        // log("Normal Order")
+        return detailInfo.slice(startIndex, endIdx);
+
+    } else if (detailInfo.length < endIdx) { 
+        // log("Nothing in detailInfo", startIndex, endIdx)
+        const reverseArray = detailInfo.reverse();
+        return reverseArray.slice(0, perPage)
+
     } else {
-        return detailInfo.slice(Number(-perPage));
+        if (indexResult === -20) {
+            // log('Last 20 Games')
+            return detailInfo.slice(indexResult)
+        } else {
+            // log(indexResult - 20, indexResult);
+            return detailInfo.slice(indexResult - 20, indexResult);
+        };
+       
     }
 }
 
@@ -201,5 +222,5 @@ export function getGameAppId() {
 }
 
 export function getTotalPages() {
-    return Math.ceil((gameAppId.length / perPage)-2);
+    return Math.ceil((gameAppId.length / perPage) -2);
 }
