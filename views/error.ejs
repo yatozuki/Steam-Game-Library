@@ -4,22 +4,25 @@
 <div class="container-err">
     <!-- Button go back to previous page on click -->
     <% if (game) { %>
-    <button class="error-btn" onclick="history.back()">
+        <button class="error-btn" onclick="history.back()">
     <% } else { %>
     <!-- Button redirects to home on click -->
-    <button class="error-btn" onclick="location.href='/'">
+        <a class="error-link" href="/?page=<%= page %>">
+        
+            <button class="error-btn" onclick="location.href='/'">
     <% } %>
-        <!-- Error caption -->
-        <h1 class="item-err"><%= caption %></h1>
-        <!-- Error message -->
-        <h3 class="item-err">
-            <span class="err-message"><%= message %></span>
-        </h3>
-        <!-- Detailed error info -->
-        <h3 class="item-err">
-            <span class="error"><%- error %></span>
-        </h3>
-    </button>
+                <!-- Error caption -->
+                <h1 class="item-err"><%= caption %></h1>
+                <!-- Error message -->
+                <h3 class="item-err">
+                    <span class="err-message"><%= message %></span>
+                </h3>
+                <!-- Detailed error info -->
+                <h3 class="item-err">
+                    <span class="error"><%- error %></span>
+                </h3>
+            </button>
+        </a>
 </div>
 
 <%- include('partials/footer.ejs') %>

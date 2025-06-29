@@ -39,6 +39,7 @@ export async function searchGames(req, res) {
         return res.render('error', {
             query,
             game: null,
+            page,
             caption: "Something is wrong!",
             message: 'Failed to load search result',
             error: error.message

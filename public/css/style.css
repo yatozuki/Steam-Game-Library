@@ -30,6 +30,11 @@ body {
     min-height: 70vh;
     padding: 2rem;
 }
+
+.error-link {
+    color: inherit;
+}
+
 .error-btn {
     background: linear-gradient(130deg, rgb(141, 36, 80) 0%, rgb(54, 6, 82) 30%, rgb(57, 6, 86) 70%, rgb(141, 36, 80) 100%);
     align-self: center;

@@ -18,6 +18,7 @@ export async function getGameDetail(req, res) {
             res.render('error', {
                 query,
                 game,
+                page: 1,
                 caption: "404 Data Not Found!",
                 message,
                 error
@@ -57,6 +58,7 @@ export async function getGameDetail(req, res) {
         res.render('error', {
             query,
             game: null,
+            page: 1,
             caption: "Something is wrong!",
             message: 'Failed to load game detail',
             error: error.message

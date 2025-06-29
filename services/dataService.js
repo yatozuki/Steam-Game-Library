@@ -70,7 +70,7 @@ export function saveData() {
         fs.writeFileSync('./data/details.json', JSON.stringify(detailInfo, null, 2));
         fs.writeFileSync('./data/skip_IDs.json', JSON.stringify(skipID, null, 2));
 
-        log(`Total: ${actualGames.length + dlcGames.length + ignoreID.length}`);
+        // log(`Total: ${actualGames.length + dlcGames.length + ignoreID.length}`);
 
     } catch (error) {
         log(chalk.red('Error saving progress:', error.message));

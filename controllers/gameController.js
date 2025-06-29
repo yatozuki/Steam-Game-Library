@@ -7,10 +7,10 @@ import { log } from '../utils/helpers.js';
 import chalk from 'chalk';
 
 export async function getHomePage(req, res) {
+    const page = parseInt(req.query.page) || 1;
     const query = req.query.q?.trim().toLowerCase() || '';
 
     try {
-        const page = parseInt(req.query.page) || 1;
         const totalPages = getTotalPages();
         const games = await gameFilter(page, perPage);
 
@@ -18,6 +18,7 @@ export async function getHomePage(req, res) {
             res.render('error', {
                 query,
                 game: null,
+                page,
                 caption: "Reached Steam API Limit!",
                 message: "Unfortunately, you’ve hit the Steam API limit. Please wait a few minutes before trying again.",
                 error: "Request failed with status code 429"
@@ -39,6 +40,7 @@ export async function getHomePage(req, res) {
         res.render('error', {
             query,
             game: null,
+            page,
             caption: "Something is wrong!",
             message: 'Failed to load home page',
             error: error.message
